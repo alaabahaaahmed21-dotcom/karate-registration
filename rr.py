@@ -1,5 +1,5 @@
 import streamlit as st
-import pِandas as pd
+import pandas as pd
 from datetime import date
 import io
 from pathlib import Path
@@ -38,17 +38,6 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
-# ---- دالة لعرض اللوجوهات ----
-def show_logos():
-    st.markdown(f"""
-    <div class="image-row">
-        <img src="{img1}">
-        <img src="{img2}">
-        <img src="{img3}">
-        <img src="{img4}">
-    </div>
-    """, unsafe_allow_html=True)
-
 # -------- PAGE LOGIC --------
 if "page" not in st.session_state:
     st.session_state.page = "select_championship"
@@ -76,7 +65,17 @@ for key in ["club", "nationality", "coach_name", "phone_number"]:
 
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 if st.session_state.page == "select_championship":
-    show_logos()
+
+    # ---- عرض اللوجوهات أول الصفحة ----
+    st.markdown(f"""
+    <div class="image-row">
+        <img src="{img1}">
+        <img src="{img2}">
+        <img src="{img3}">
+        <img src="{img4}">
+    </div>
+    """, unsafe_allow_html=True)
+
     st.title("🏆 Select Championship")
 
     championship = st.selectbox(
@@ -85,12 +84,11 @@ if st.session_state.page == "select_championship":
             "African Master Course",
             "North Africa Traditional Karate Championship",
             "Unified Karate Championship (General)"
-        ],
-        key="selected_championship_temp"
+        ]
     )
 
     if st.button("Next ➜"):
-        st.session_state.selected_championship = st.session_state.selected_championship_temp
+        st.session_state.selected_championship = championship
         st.session_state.page = "registration"
         st.rerun()
     st.stop()
@@ -104,7 +102,14 @@ if st.session_state.page == "registration":
         st.rerun()
 
     # ---- عرض اللوجوهات ----
-    show_logos()
+    st.markdown(f"""
+    <div class="image-row">
+        <img src="{img1}">
+        <img src="{img2}">
+        <img src="{img3}">
+        <img src="{img4}">
+    </div>
+    """, unsafe_allow_html=True)
 
     # ---- اسم البطولة ----
     st.markdown(
@@ -209,7 +214,7 @@ if st.session_state.page == "registration":
                 st.session_state[f"belt_empty_{i}"] = False
                 st.session_state[f"comp_empty_{i}"] = False
 
-            # Check for repeated Player Codes in form
+            # Check for repeated Player Codes
             codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
             if len(codes_in_form) != len(set(codes_in_form)):
                 st.error("⚠️ Some Player Codes are repeated in this submission!")
@@ -241,13 +246,21 @@ if st.session_state.page == "registration":
                     count += 1
                 save_data(df)
                 st.success(f"{count} players registered successfully!")
+
+                # Clear all global inputs
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
-                    st.session_state[key] = ""
+                    if key in st.session_state:
+                        st.session_state[key] = ""
+                # Clear individual inputs
                 for i in range(num_players):
-                    st.session_state[f"name{i}"] = ""
-                    st.session_state[f"code{i}"] = ""
-                    st.session_state[f"belt{i}"] = belt_options[0]
-                    st.session_state[f"comp{i}"] = []
+                    if f"name{i}" in st.session_state:
+                        st.session_state[f"name{i}"] = ""
+                    if f"code{i}" in st.session_state:
+                        st.session_state[f"code{i}"] = ""
+                    if f"belt{i}" in st.session_state:
+                        st.session_state[f"belt{i}"] = belt_options[0]
+                    if f"comp{i}" in st.session_state:
+                        st.session_state[f"comp{i}"] = []
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
@@ -264,10 +277,7 @@ if admin_password == "mobadr90":
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
 
-        if "selected_championship" in st.session_state:
-            championship_name = st.session_state.selected_championship.replace(" ", "_")
-        else:
-            championship_name = "athletes_data"
+        championship_name = st.session_state.get("selected_championship", "athletes_data").replace(" ", "_")
 
         st.download_button(
             label="📥 Download Excel",
