@@ -42,6 +42,27 @@ body {
 if "page" not in st.session_state:
     st.session_state.page = "select_championship"
 
+# -------- FILE SETUP --------
+DATA_FILE = Path("athletes_data.csv")
+
+def load_data():
+    if DATA_FILE.exists():
+        return pd.read_csv(DATA_FILE)
+    else:
+        return pd.DataFrame(columns=[
+            "Championship",
+            "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
+            "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
+        ])
+
+def save_data(df):
+    df.to_csv(DATA_FILE, index=False)
+
+# -------- SESSION STATE DEFAULTS --------
+for key in ["club", "nationality", "coach_name", "phone_number"]:
+    if key not in st.session_state:
+        st.session_state[key] = ""
+
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 if st.session_state.page == "select_championship":
     st.title("🏆 Select Championship")
@@ -72,27 +93,6 @@ if st.session_state.page == "select_championship":
         st.session_state.page = "registration"
         st.rerun()
     st.stop()
-
-# -------- FILE SETUP --------
-DATA_FILE = Path("athletes_data.csv")
-
-def load_data():
-    if DATA_FILE.exists():
-        return pd.read_csv(DATA_FILE)
-    else:
-        return pd.DataFrame(columns=[
-            "Championship",
-            "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
-            "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
-        ])
-
-def save_data(df):
-    df.to_csv(DATA_FILE, index=False)
-
-# -------- SESSION STATE --------
-for key in ["club", "nationality", "coach_name", "phone_number"]:
-    if key not in st.session_state:
-        st.session_state[key] = ""
 
 # -------- Registration Page --------
 if st.session_state.page == "registration":
@@ -250,13 +250,18 @@ if st.session_state.page == "registration":
                 st.success(f"{count} players registered successfully!")
                 # Clear all global inputs
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
-                    st.session_state[key] = ""
+                    if key in st.session_state:
+                        st.session_state[key] = ""
                 # Clear individual inputs
                 for i in range(num_players):
-                    st.session_state[f"name{i}"] = ""
-                    st.session_state[f"code{i}"] = ""
-                    st.session_state[f"belt{i}"] = belt_options[0]
-                    st.session_state[f"comp{i}"] = []
+                    if f"name{i}" in st.session_state:
+                        st.session_state[f"name{i}"] = ""
+                    if f"code{i}" in st.session_state:
+                        st.session_state[f"code{i}"] = ""
+                    if f"belt{i}" in st.session_state:
+                        st.session_state[f"belt{i}"] = belt_options[0]
+                    if f"comp{i}" in st.session_state:
+                        st.session_state[f"comp{i}"] = []
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
@@ -285,4 +290,3 @@ if admin_password == "mobadr90":
             file_name=f"{championship_name}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
