@@ -59,9 +59,9 @@ def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
 # -------- SESSION STATE DEFAULTS --------
-for key in ["club", "nationality", "coach_name", "phone_number"]:
+for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
     if key not in st.session_state:
-        st.session_state[key] = ""
+        st.session_state[key] = "" if key != "submit_count" else 0
 
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 if st.session_state.page == "select_championship":
@@ -113,6 +113,7 @@ if st.session_state.page == "registration":
         unsafe_allow_html=True
     )
 
+    # -------- Club, Nationality, Coach, Phone Inputs --------
     st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
     st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
     st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
@@ -135,8 +136,11 @@ if st.session_state.page == "registration":
 
     athletes_data = []
 
+    # -------- Player Inputs with dynamic keys --------
+    submit_count = st.session_state.submit_count
     for i in range(num_players):
         with st.expander(f"Player {i+1}"):
+            # Default label colors
             name_color = "black"
             code_color = "black"
             comp_color = "black"
@@ -151,23 +155,25 @@ if st.session_state.page == "registration":
             if st.session_state.get(f"comp_empty_{i}", False):
                 comp_color = "red"
 
+            key_suffix = f"_{submit_count}_{i}"
+
             st.markdown(f"<label style='color:{name_color}'>Athlete Name</label>", unsafe_allow_html=True)
-            athlete_name = st.text_input("", key=f"name{i}")
+            athlete_name = st.text_input("", key=f"name{key_suffix}")
 
             st.markdown("<label>Date of Birth</label>", unsafe_allow_html=True)
-            dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{i}")
+            dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{key_suffix}")
 
             st.markdown("<label>Sex</label>", unsafe_allow_html=True)
-            sex = st.selectbox("", ["Male", "Female"], key=f"sex{i}")
+            sex = st.selectbox("", ["Male", "Female"], key=f"sex{key_suffix}")
 
             st.markdown(f"<label style='color:{code_color}'>Player Code</label>", unsafe_allow_html=True)
-            player_code = st.text_input("", key=f"code{i}")
+            player_code = st.text_input("", key=f"code{key_suffix}")
 
             st.markdown(f"<label style='color:{belt_color}'>Belt Degree</label>", unsafe_allow_html=True)
-            belt_degree = st.selectbox("", belt_options, key=f"belt{i}")
+            belt_degree = st.selectbox("", belt_options, key=f"belt{key_suffix}")
 
             st.markdown(f"<label style='color:{comp_color}'>Competitions</label>", unsafe_allow_html=True)
-            competitions = st.multiselect("", competitions_list, key=f"comp{i}")
+            competitions = st.multiselect("", competitions_list, key=f"comp{key_suffix}")
 
             athletes_data.append({
                 "Athlete Name": athlete_name,
@@ -185,6 +191,7 @@ if st.session_state.page == "registration":
                 "Championship": st.session_state.selected_championship
             })
 
+    # -------- Submit Button --------
     if st.button("Submit All"):
         if not st.session_state.club.strip():
             st.error("⚠️ Please enter a Club name before submitting!")
@@ -199,12 +206,14 @@ if st.session_state.page == "registration":
             df = load_data()
             count = 0
 
+            # Reset missing field markers
             for i in range(num_players):
                 st.session_state[f"name_empty_{i}"] = False
                 st.session_state[f"code_empty_{i}"] = False
                 st.session_state[f"belt_empty_{i}"] = False
                 st.session_state[f"comp_empty_{i}"] = False
 
+            # Check for repeated Player Codes in form
             codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
             if len(codes_in_form) != len(set(codes_in_form)):
                 st.error("⚠️ Some Player Codes are repeated in this submission!")
@@ -237,21 +246,12 @@ if st.session_state.page == "registration":
                 save_data(df)
                 st.success(f"{count} players registered successfully!")
 
-                # ---- Clear all inputs completely ----
+                # Clear all global inputs
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
                     st.session_state[key] = ""
 
-                for i in range(num_players):
-                    for k in ["name", "code", "belt", "comp", "dob", "sex"]:
-                        key = f"{k}{i}"
-                        if key in st.session_state:
-                            del st.session_state[key]
-
-                    for k in ["name_empty", "code_empty", "belt_empty", "comp_empty"]:
-                        key = f"{k}_{i}"
-                        if key in st.session_state:
-                            del st.session_state[key]
-
+                # زيادة submit_count لتفريغ كل الـ widgets اللاعبين
+                st.session_state.submit_count += 1
                 st.rerun()
 
 # -------- Admin Panel (Sidebar) --------
@@ -269,10 +269,7 @@ if admin_password == "mobadr90":
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
 
-        if "selected_championship" in st.session_state:
-            championship_name = st.session_state.selected_championship.replace(" ", "_")
-        else:
-            championship_name = "athletes_data"
+        championship_name = st.session_state.get("selected_championship", "athletes_data").replace(" ", "_")
 
         st.download_button(
             label="📥 Download Excel",
