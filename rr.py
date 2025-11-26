@@ -17,17 +17,16 @@ st.markdown("""
 .image-row {
     display: flex;
     justify-content: center;
-    gap: 10px;      /* المسافة بين الصور */
-    flex-wrap: nowrap; /* يمنع نزول الصور تحت بعض */
+    gap: 10px;
+    flex-wrap: nowrap;
 }
 .image-row img {
-    width: 80px;   /* حجم الصورة */
+    width: 70px;
     height: auto;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ---- HTML لعرض 4 صور جنب بعض ----
 st.markdown(f"""
 <div class="image-row">
     <img src="{img1}">
@@ -36,24 +35,6 @@ st.markdown(f"""
     <img src="{img4}">
 </div>
 """, unsafe_allow_html=True)
-
-# -------- العنوان --------
-st.title("🏆 African Championship Registration")
-
-# -------- FILE SETUP --------
-DATA_FILE = Path("athletes_data.csv")
-
-def load_data():
-    if DATA_FILE.exists():
-        return pd.read_csv(DATA_FILE)
-    else:
-        return pd.DataFrame(columns=[
-            "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
-            "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
-        ])
-
-def save_data(df):
-    df.to_csv(DATA_FILE, index=False)
 
 # -------- LIGHT THEME CSS --------
 st.markdown(
@@ -85,6 +66,47 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# -------- PAGE LOGIC --------
+if "page" not in st.session_state:
+    st.session_state.page = "select_championship"
+
+# -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
+if st.session_state.page == "select_championship":
+
+    st.title("🏆 Select Championship")
+
+    championship = st.selectbox(
+        "Please select the championship you want to register for:",
+        [
+            "African Master Course",
+            "North Africa Traditional Karate Championship",
+            "Unified Karate Championship (General)"
+        ]
+    )
+
+    if st.button("Next ➜"):
+        st.session_state.selected_championship = championship
+        st.session_state.page = "registration"
+        st.rerun()
+
+    st.stop()
+
+# -------- FILE SETUP --------
+DATA_FILE = Path("athletes_data.csv")
+
+def load_data():
+    if DATA_FILE.exists():
+        return pd.read_csv(DATA_FILE)
+    else:
+        return pd.DataFrame(columns=[
+            "Championship",
+            "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
+            "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
+        ])
+
+def save_data(df):
+    df.to_csv(DATA_FILE, index=False)
+
 # -------- SESSION STATE --------
 for key in ["club", "nationality", "coach_name", "phone_number"]:
     if key not in st.session_state:
@@ -115,6 +137,8 @@ belt_options = [
 athletes_data = []
 
 # -------- Player Inputs --------
+st.title(f"🏆 Registration Form: {st.session_state.selected_championship}")
+
 for i in range(num_players):
     with st.expander(f"Player {i+1}"):
         # Default label colors
@@ -162,7 +186,8 @@ for i in range(num_players):
             "Belt Degree": belt_degree,
             "Competitions": ", ".join(competitions),
             "Competitions List": competitions,
-            "index": i
+            "index": i,
+            "Championship": st.session_state.selected_championship
         })
 
 # -------- Submit Button --------
@@ -170,9 +195,9 @@ if st.button("Submit All"):
     if not st.session_state.club.strip():
         st.error("⚠️ Please enter a Club name before submitting!")
     elif not st.session_state.nationality.strip():
-        st.error("⚠️ Please enter a Nationality before submitting!")
+        st.error("⚠️ Please enter Nationality before submitting!")
     elif not st.session_state.coach_name.strip():
-        st.error("⚠️ Please enter Trainer Name before submitting!")
+        st.error("⚠️ Please enter Coach Name before submitting!")
     elif not st.session_state.phone_number.strip():
         st.error("⚠️ Please enter Phone Number before submitting!")
     else:
