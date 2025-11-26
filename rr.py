@@ -3,6 +3,21 @@ import pandas as pd
 from datetime import date
 import io
 from pathlib import Path
+from PIL import Image
+
+img1 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM.jpeg")
+img2 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM (1).jpeg")
+img3 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM.jpeg")
+img4 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM (1).jpeg")
+images = [img1, img2, img3, img4]
+
+# الأعمدة + مسافات صغيرة بينهم
+col1, spacer1, col2, spacer2, col3, spacer3, col4 = st.columns([1, 0.2, 1, 0.2, 1, 0.2, 1])
+
+cols = [col1, col2, col3, col4]
+
+for col, img in zip(cols, images):
+    col.image(img, width=80)   # حجم الصورة
 
 # -------- العنوان --------
 st.title("🏆African Championship Registration")
