@@ -5,20 +5,41 @@ import io
 from pathlib import Path
 from PIL import Image
 
-img1 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM.jpeg")
-img2 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM (1).jpeg")
-img3 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM.jpeg")
-img4 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM (1).jpeg")
-images = [img1, img2, img3, img4]
 
-# الأعمدة + مسافات صغيرة بينهم
-col1, spacer1, col2, spacer2, col3, spacer3, col4 = st.columns([1, 0.2, 1, 0.2, 1, 0.2, 1])
+st.markdown("""
+<style>
+    .logo-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .logo-container img {
+        max-height: 80px;
+        object-fit: contain;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-cols = [col1, col2, col3, col4]
+# إنشاء أعمدة للشعارات
+col1, col2, col3, col4 = st.columns(4)
 
-for col, img in zip(cols, images):
-    col.image(img, width=80)   # حجم الصورة
 
+img1 = "WhatsApp Image 2025-11-26 at 2.28.15 PM.jpeg"  
+img2 = "WhatsApp Image 2025-11-26 at 2.44.02 PM (1).jpeg"  
+img3 = "WhatsApp Image 2025-11-26 at 2.44.02 PM.jpeg"  
+img4 = "WhatsApp Image 2025-11-26 at 2.28.15 PM (1).jpeg" 
+with col1:
+    st.image(img1, use_column_width=True)
+
+with col2:
+    st.image(img2, use_column_width=True)
+
+with col3:
+    st.image(img3, use_column_width=True)
+
+with col4:
+    st.image(img4, use_column_width=True)
 # -------- العنوان --------
 st.title("🏆African Championship Registration")
 
