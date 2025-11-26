@@ -122,7 +122,7 @@ for i in range(num_players):
             "Athlete Name": athlete_name,
             "Club": st.session_state.club.strip(),
             "Nationality": st.session_state.nationality.strip(),
-            "Trainer Name": st.session_state.trainer_name.strip(),
+            "Coach Name": st.session_state.trainer_name.strip(),
             "Phone Number": st.session_state.phone_number.strip(),
             "Date of Birth": str(dob),
             "Sex": sex,
