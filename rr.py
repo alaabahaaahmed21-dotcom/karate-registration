@@ -66,7 +66,6 @@ for key in ["club", "nationality", "coach_name", "phone_number"]:
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 if st.session_state.page == "select_championship":
 
-    # ---- عرض اللوجوهات أول الصفحة ----
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -96,12 +95,10 @@ if st.session_state.page == "select_championship":
 # -------- Registration Page --------
 if st.session_state.page == "registration":
 
-    # ---- زر العودة لصفحة اختيار البطولة ----
     if st.button("⬅ Back to Championship Selection"):
         st.session_state.page = "select_championship"
         st.rerun()
 
-    # ---- عرض اللوجوهات ----
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -111,19 +108,16 @@ if st.session_state.page == "registration":
     </div>
     """, unsafe_allow_html=True)
 
-    # ---- اسم البطولة ----
     st.markdown(
         f"<h3 style='text-align: left; color: black; margin-top: 10px;'>🏆 Registration Form: {st.session_state.selected_championship}</h3>",
         unsafe_allow_html=True
     )
 
-    # -------- Club, Nationality, Coach, Phone Inputs --------
     st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
     st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
     st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
     st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
 
-    # Number of players
     num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
 
     competitions_list = [
@@ -141,10 +135,8 @@ if st.session_state.page == "registration":
 
     athletes_data = []
 
-    # -------- Player Inputs --------
     for i in range(num_players):
         with st.expander(f"Player {i+1}"):
-            # Default label colors
             name_color = "black"
             code_color = "black"
             comp_color = "black"
@@ -193,7 +185,6 @@ if st.session_state.page == "registration":
                 "Championship": st.session_state.selected_championship
             })
 
-    # -------- Submit Button --------
     if st.button("Submit All"):
         if not st.session_state.club.strip():
             st.error("⚠️ Please enter a Club name before submitting!")
@@ -208,14 +199,12 @@ if st.session_state.page == "registration":
             df = load_data()
             count = 0
 
-            # Reset missing field markers
             for i in range(num_players):
                 st.session_state[f"name_empty_{i}"] = False
                 st.session_state[f"code_empty_{i}"] = False
                 st.session_state[f"belt_empty_{i}"] = False
                 st.session_state[f"comp_empty_{i}"] = False
 
-            # Check for repeated Player Codes in form
             codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
             if len(codes_in_form) != len(set(codes_in_form)):
                 st.error("⚠️ Some Player Codes are repeated in this submission!")
@@ -248,7 +237,7 @@ if st.session_state.page == "registration":
                 save_data(df)
                 st.success(f"{count} players registered successfully!")
 
-                # -------- Clear all inputs safely after submit --------
+                # ---- Clear all inputs completely ----
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
                     st.session_state[key] = ""
 
@@ -258,13 +247,12 @@ if st.session_state.page == "registration":
                         if key in st.session_state:
                             del st.session_state[key]
 
-                    # Reset error markers
                     for k in ["name_empty", "code_empty", "belt_empty", "comp_empty"]:
                         key = f"{k}_{i}"
                         if key in st.session_state:
                             del st.session_state[key]
 
-                st.rerun()  # لإعادة تحميل الصفحة بعد التفريغ
+                st.rerun()
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
@@ -281,7 +269,6 @@ if admin_password == "mobadr90":
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
 
-        # اسم الملف حسب البطولة المحددة
         if "selected_championship" in st.session_state:
             championship_name = st.session_state.selected_championship.replace(" ", "_")
         else:
