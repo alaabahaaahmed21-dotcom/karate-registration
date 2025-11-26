@@ -47,18 +47,7 @@ DATA_FILE = Path("athletes_data.csv")
 
 def load_data():
     if DATA_FILE.exists():
-        df = pd.read_csv(DATA_FILE)
-
-        # إصلاح: منع خطأ لو الملف فاضي بدون أعمدة
-        for col in [
-            "Championship","Athlete Name","Club","Nationality","Coach Name",
-            "Phone Number","Date of Birth","Sex","Player Code","Belt Degree","Competitions"
-        ]:
-            if col not in df.columns:
-                df[col] = ""
-
-        return df
-
+        return pd.read_csv(DATA_FILE)
     else:
         return pd.DataFrame(columns=[
             "Championship",
@@ -101,7 +90,7 @@ if st.session_state.page == "select_championship":
     if st.button("Next ➜"):
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
-        st.rerun()   # إصلاح مهم
+        st.rerun()
 
 # -------- Registration Page --------
 if st.session_state.page == "registration":
@@ -218,14 +207,12 @@ if st.session_state.page == "registration":
             df = load_data()
             count = 0
 
-            # Reset missing field markers
             for i in range(num_players):
                 st.session_state[f"name_empty_{i}"] = False
                 st.session_state[f"code_empty_{i}"] = False
                 st.session_state[f"belt_empty_{i}"] = False
                 st.session_state[f"comp_empty_{i}"] = False
 
-            # Check duplicate codes inside form
             codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
             if len(codes_in_form) != len(set(codes_in_form)):
                 st.error("⚠️ Some Player Codes are repeated in this submission!")
@@ -233,7 +220,6 @@ if st.session_state.page == "registration":
 
             for athlete in athletes_data:
                 idx = athlete["index"]
-
                 if not athlete["Athlete Name"]:
                     st.session_state[f"name_empty_{idx}"] = True
                     error_found = True
@@ -246,8 +232,6 @@ if st.session_state.page == "registration":
                 if len(athlete["Competitions List"]) == 0:
                     st.session_state[f"comp_empty_{idx}"] = True
                     error_found = True
-
-                # إصلاح: تفادي خطأ لو الملف لسه فاضي
                 if "Player Code" in df.columns:
                     if athlete["Player Code"] in df["Player Code"].values:
                         st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
@@ -259,18 +243,27 @@ if st.session_state.page == "registration":
                 for athlete in athletes_data:
                     df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
                     count += 1
-
                 save_data(df)
+
                 st.success(f"{count} players registered successfully!")
 
-                for key in ["club","nationality","coach_name","phone_number"]:
-                    st.session_state[key] = ""
+                # Clear all global inputs
+                for key in ["club", "nationality", "coach_name", "phone_number"]:
+                    if key in st.session_state:
+                        st.session_state[key] = ""
 
+                # Clear individual inputs
                 for i in range(num_players):
-                    st.session_state[f"name{i}"] = ""
-                    st.session_state[f"code{i}"] = ""
-                    st.session_state[f"belt{i}"] = belt_options[0]
-                    st.session_state[f"comp{i}"] = []
+                    if f"name{i}" in st.session_state:
+                        st.session_state[f"name{i}"] = ""
+                    if f"code{i}" in st.session_state:
+                        st.session_state[f"code{i}"] = ""
+                    if f"belt{i}" in st.session_state:
+                        st.session_state[f"belt{i}"] = belt_options[0]
+                    if f"comp{i}" in st.session_state:
+                        st.session_state[f"comp{i}"] = []
+
+                st.rerun()
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
@@ -279,12 +272,10 @@ admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 if admin_password == "mobadr90":
     st.sidebar.success("Logged in as Admin ✅")
     df = load_data()
-
     if df.empty:
         st.info("No data found yet.")
     else:
         st.dataframe(df, use_container_width=True)
-
         excel_buffer = io.BytesIO()
         df.to_excel(excel_buffer, index=False)
         excel_buffer.seek(0)
