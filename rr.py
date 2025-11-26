@@ -41,7 +41,12 @@ body {
 # -------- PAGE LOGIC --------
 if "page" not in st.session_state:
     st.session_state.page = "select_championship"
-# ---- عرض اللوجوهات ----
+
+# -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
+if st.session_state.page == "select_championship":
+    st.title("🏆 Select Championship")
+
+    # ---- عرض اللوجوهات ----
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -53,12 +58,6 @@ if "page" not in st.session_state:
 
     st.write("")  # عنصر إضافي للتأكد من عرض HTML
 
-
-# -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
-if st.session_state.page == "select_championship":
-    st.title("🏆 Select Championship")
-
-    
     championship = st.selectbox(
         "Please select the championship you want to register for:",
         [
@@ -97,6 +96,11 @@ for key in ["club", "nationality", "coach_name", "phone_number"]:
 
 # -------- Registration Page --------
 if st.session_state.page == "registration":
+
+    # ---- زر العودة لصفحة اختيار البطولة ----
+    if st.button("⬅ Back to Championship Selection"):
+        st.session_state.page = "select_championship"
+        st.rerun()
 
     # ---- عرض اللوجوهات ----
     st.markdown(f"""
@@ -269,7 +273,7 @@ if admin_password == "mobadr90":
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
 
-        # اسم الملف حسب البطولة المحددة (أول صف في البيانات)
+        # اسم الملف حسب البطولة المحددة
         if "selected_championship" in st.session_state:
             championship_name = st.session_state.selected_championship.replace(" ", "_")
         else:
@@ -282,4 +286,3 @@ if admin_password == "mobadr90":
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-         
