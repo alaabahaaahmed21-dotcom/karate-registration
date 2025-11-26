@@ -21,7 +21,7 @@ st.markdown("""
     flex-wrap: nowrap; /* يمنع نزول الصور تحت بعض */
 }
 .image-row img {
-    width: 70px;   /* حجم الصورة */
+    width: 80px;   /* حجم الصورة */
     height: auto;
 }
 </style>
