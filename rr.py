@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 # -------- العنوان --------
-st.title("African Championship Registration")
+st.title("🏆African Championship Registration")
 
 
 # -------- FILE SETUP --------
