@@ -5,8 +5,6 @@ import io
 from pathlib import Path
 from PIL import Image
 
-
-
 # ---- روابط الصور من GitHub RAW ----
 img1 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo1.png"
 img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo2.png"
@@ -39,9 +37,8 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-
 # -------- العنوان --------
-st.title("🏆African Championship Registration")
+st.title("🏆 African Championship Registration")
 
 # -------- FILE SETUP --------
 DATA_FILE = Path("athletes_data.csv")
@@ -58,29 +55,30 @@ def load_data():
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
-# -------- DARK THEME CSS --------
+# -------- LIGHT THEME CSS --------
 st.markdown(
     """
     <style>
     body {
-        background-color: #0e0e0e;
-        color: white;
+        background-color: white;
+        color: black;
     }
-    .stTextInput>div>div>input, .stNumberInput>div>div>input {
-        background-color: #1e1e1e;
-        color: white;
+    .stTextInput>div>div>input, 
+    .stNumberInput>div>div>input {
+        background-color: #f0f0f0;
+        color: black;
     }
     .stSelectbox>div>div>div>select {
-        background-color: #1e1e1e;
-        color: white;
+        background-color: #f0f0f0;
+        color: black;
     }
     .stMultiselect>div>div>div>div>div {
-        background-color: #1e1e1e;
-        color: white;
+        background-color: #f0f0f0;
+        color: black;
     }
     .stDateInput>div>div>input {
-        background-color: #1e1e1e;
-        color: white;
+        background-color: #f0f0f0;
+        color: black;
     }
     </style>
     """,
@@ -91,8 +89,6 @@ st.markdown(
 for key in ["club", "nationality", "coach_name", "phone_number"]:
     if key not in st.session_state:
         st.session_state[key] = ""
-
-
 
 # -------- Club, Nationality, Coach, Phone Inputs --------
 st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
@@ -122,10 +118,10 @@ athletes_data = []
 for i in range(num_players):
     with st.expander(f"Player {i+1}"):
         # Default label colors
-        name_color = "white"
-        code_color = "white"
-        comp_color = "white"
-        belt_color = "white"
+        name_color = "black"
+        code_color = "black"
+        comp_color = "black"
+        belt_color = "black"
 
         if st.session_state.get(f"name_empty_{i}", False):
             name_color = "red"
@@ -175,7 +171,7 @@ if st.button("Submit All"):
         st.error("⚠️ Please enter a Club name before submitting!")
     elif not st.session_state.nationality.strip():
         st.error("⚠️ Please enter a Nationality before submitting!")
-    elif not st.session_state.trainer_name.strip():
+    elif not st.session_state.coach_name.strip():
         st.error("⚠️ Please enter Trainer Name before submitting!")
     elif not st.session_state.phone_number.strip():
         st.error("⚠️ Please enter Phone Number before submitting!")
