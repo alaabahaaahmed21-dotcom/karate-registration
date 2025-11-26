@@ -188,7 +188,7 @@ if st.button("Submit All"):
             save_data(df)
             st.success(f"{count} players registered successfully!")
             # Clear all global inputs
-            for key in ["club", "nationality", "trainer_name", "phone_number"]:
+            for key in ["club", "nationality", "coach_name", "phone_number"]:
                 st.session_state[key] = ""
             # Clear individual inputs
             for i in range(num_players):
