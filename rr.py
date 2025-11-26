@@ -12,8 +12,8 @@ def load_data():
         return pd.read_csv(DATA_FILE)
     else:
         return pd.DataFrame(columns=[
-            "Athlete Name", "Club", "Nationality", "Date of Birth", "Sex", 
-            "Player Code", "Belt Degree", "Competitions"
+            "Athlete Name", "Club", "Nationality", "Trainer Name", "Phone Number",
+            "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
         ])
 
 def save_data(df):
@@ -27,7 +27,7 @@ st.markdown(
         background-color: #0e0e0e;
         color: white;
     }
-    .stTextInput>div>div>input {
+    .stTextInput>div>div>input, .stNumberInput>div>div>input {
         background-color: #1e1e1e;
         color: white;
     }
@@ -49,16 +49,17 @@ st.markdown(
 )
 
 # -------- SESSION STATE --------
-if "club" not in st.session_state:
-    st.session_state.club = ""
-if "nationality" not in st.session_state:
-    st.session_state.nationality = ""
+for key in ["club", "nationality", "trainer_name", "phone_number"]:
+    if key not in st.session_state:
+        st.session_state[key] = ""
 
 st.title("🏆 Karate Championship Registration")
 
-# -------- Club and Nationality Input --------
+# -------- Club, Nationality, Trainer, Phone Inputs --------
 st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
 st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
+st.session_state.trainer_name = st.text_input("Enter Trainer Name for all players", value=st.session_state.trainer_name)
+st.session_state.phone_number = st.text_input("Enter Phone Number for all players", value=st.session_state.phone_number)
 
 # Number of players
 num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
@@ -118,6 +119,8 @@ for i in range(num_players):
             "Athlete Name": athlete_name,
             "Club": st.session_state.club.strip(),
             "Nationality": st.session_state.nationality.strip(),
+            "Trainer Name": st.session_state.trainer_name.strip(),
+            "Phone Number": st.session_state.phone_number.strip(),
             "Date of Birth": str(dob),
             "Sex": sex,
             "Player Code": player_code,
@@ -133,6 +136,10 @@ if st.button("Submit All"):
         st.error("⚠️ Please enter a Club name before submitting!")
     elif not st.session_state.nationality.strip():
         st.error("⚠️ Please enter a Nationality before submitting!")
+    elif not st.session_state.trainer_name.strip():
+        st.error("⚠️ Please enter Trainer Name before submitting!")
+    elif not st.session_state.phone_number.strip():
+        st.error("⚠️ Please enter Phone Number before submitting!")
     else:
         error_found = False
         df = load_data()
@@ -177,8 +184,9 @@ if st.button("Submit All"):
                 count += 1
             save_data(df)
             st.success(f"{count} players registered successfully!")
-            st.session_state.club = ""
-            st.session_state.nationality = ""
+            # Clear all global inputs
+            for key in ["club", "nationality", "trainer_name", "phone_number"]:
+                st.session_state[key] = ""
             # Clear individual inputs
             for i in range(num_players):
                 st.session_state[f"name{i}"] = ""
