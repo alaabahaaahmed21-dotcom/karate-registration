@@ -8,10 +8,10 @@ from PIL import Image
 
 
 # ---- روابط الصور من GitHub RAW ----
-img1 = "https://raw.githubusercontent.com/USERNAME/REPO/main/logo1.png"
-img2 = "https://raw.githubusercontent.com/USERNAME/REPO/main/logo2.png"
-img3 = "https://raw.githubusercontent.com/USERNAME/REPO/main/logo3.png"
-img4 = "https://raw.githubusercontent.com/USERNAME/REPO/main/logo4.png"
+img1 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo1.png"
+img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo2.png"
+img3 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo3.png"
+img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo4.png"
 
 # ---- CSS لضبط عرض الصور جنب بعض ----
 st.markdown("""
