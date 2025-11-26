@@ -4,13 +4,13 @@ from datetime import date
 import io
 from pathlib import Path
 
-# ---- روابط الصور من GitHub RAW ----
+# ---- روابط الصور ----
 img1 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo1.png"
 img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo2.png"
 img3 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo3.png"
 img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo4.png"
 
-# ---- CSS للصور والخلفية ----
+# ---- CSS ----
 st.markdown("""
 <style>
 .image-row {
@@ -23,18 +23,12 @@ st.markdown("""
     width: 70px;
     height: auto;
 }
-body {
-    background-color: white;
-    color: black;
-}
+body { background-color: white; color: black; }
 .stTextInput>div>div>input, 
 .stNumberInput>div>div>input,
 .stSelectbox>div>div>div>select,
 .stMultiselect>div>div>div>div>div,
-.stDateInput>div>div>input {
-    background-color: #f0f0f0;
-    color: black;
-}
+.stDateInput>div>div>input { background-color: #f0f0f0; color: black; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -48,25 +42,21 @@ DATA_FILE = Path("athletes_data.csv")
 def load_data():
     if DATA_FILE.exists():
         return pd.read_csv(DATA_FILE)
-    else:
-        return pd.DataFrame(columns=[
-            "Championship",
-            "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
-            "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
-        ])
+    return pd.DataFrame(columns=[
+        "Championship","Athlete Name","Club","Nationality","Coach Name","Phone Number",
+        "Date of Birth","Sex","Player Code","Belt Degree","Competitions"
+    ])
 
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
 # -------- SESSION STATE DEFAULTS --------
 for key in ["club", "nationality", "coach_name", "phone_number"]:
-    if key not in st.session_state:
-        st.session_state[key] = ""
+    st.session_state.setdefault(key, "")
 
-# -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
+# -------- FIRST PAGE --------
 if st.session_state.page == "select_championship":
 
-    # ---- عرض اللوجوهات أول الصفحة ----
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -80,11 +70,7 @@ if st.session_state.page == "select_championship":
 
     championship = st.selectbox(
         "Please select the championship you want to register for:",
-        [
-            "African Master Course",
-            "North Africa Traditional Karate Championship",
-            "Unified Karate Championship (General)"
-        ]
+        ["African Master Course","North Africa Traditional Karate Championship","Unified Karate Championship (General)"]
     )
 
     if st.button("Next ➜"):
@@ -96,68 +82,38 @@ if st.session_state.page == "select_championship":
 # -------- Registration Page --------
 if st.session_state.page == "registration":
 
-    # ---- زر العودة لصفحة اختيار البطولة ----
     if st.button("⬅ Back to Championship Selection"):
         st.session_state.page = "select_championship"
         st.experimental_rerun()
 
-    # ---- عرض اللوجوهات ----
     st.markdown(f"""
     <div class="image-row">
-        <img src="{img1}">
-        <img src="{img2}">
-        <img src="{img3}">
-        <img src="{img4}">
+        <img src="{img1}"><img src="{img2}"><img src="{img3}"><img src="{img4}">
     </div>
     """, unsafe_allow_html=True)
 
-    # ---- اسم البطولة ----
-    st.markdown(
-        f"<h3 style='text-align: left; color: black; margin-top: 10px;'>🏆 Registration Form: {st.session_state.selected_championship}</h3>",
-        unsafe_allow_html=True
-    )
+    st.markdown(f"<h3 style='color:black'>🏆 Registration Form: {st.session_state.selected_championship}</h3>", unsafe_allow_html=True)
 
-    # -------- Club, Nationality, Coach, Phone Inputs --------
+    # Global inputs
     st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
     st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
     st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
     st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
 
-    # Number of players
     num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
 
-    competitions_list = [
-        "Individual Kata","Kata Team","Individual Kumite","Fuko Go",
-        "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"
-    ]
-
-    belt_options = [
-        "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
-        "Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3",
-        "Kyu Junior brown 2","Kyu Junior brown 1","Kyu Senior yellow 7","Kyu Senior yellow 6",
-        "Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2",
-        "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
-    ]
+    competitions_list = ["Individual Kata","Kata Team","Individual Kumite","Fuko Go","Inbo Mix","Inbo Male","Inbo Female","Kumite Team"]
+    belt_options = ["Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7","Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3","Kyu Junior brown 2","Kyu Junior brown 1","Kyu Senior yellow 7","Kyu Senior yellow 6","Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2","Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"]
 
     athletes_data = []
 
-    # -------- Player Inputs --------
+    # Player inputs
     for i in range(num_players):
         with st.expander(f"Player {i+1}"):
-
-            name_color = "black"
-            code_color = "black"
-            comp_color = "black"
-            belt_color = "black"
-
-            if st.session_state.get(f"name_empty_{i}", False):
-                name_color = "red"
-            if st.session_state.get(f"code_empty_{i}", False):
-                code_color = "red"
-            if st.session_state.get(f"belt_empty_{i}", False):
-                belt_color = "red"
-            if st.session_state.get(f"comp_empty_{i}", False):
-                comp_color = "red"
+            name_color = "red" if st.session_state.get(f"name_empty_{i}", False) else "black"
+            code_color = "red" if st.session_state.get(f"code_empty_{i}", False) else "black"
+            belt_color = "red" if st.session_state.get(f"belt_empty_{i}", False) else "black"
+            comp_color = "red" if st.session_state.get(f"comp_empty_{i}", False) else "black"
 
             st.markdown(f"<label style='color:{name_color}'>Athlete Name</label>", unsafe_allow_html=True)
             athlete_name = st.text_input("", key=f"name{i}")
@@ -166,7 +122,7 @@ if st.session_state.page == "registration":
             dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{i}")
 
             st.markdown("<label>Sex</label>", unsafe_allow_html=True)
-            sex = st.selectbox("", ["Male", "Female"], key=f"sex{i}")
+            sex = st.selectbox("", ["Male","Female"], key=f"sex{i}")
 
             st.markdown(f"<label style='color:{code_color}'>Player Code</label>", unsafe_allow_html=True)
             player_code = st.text_input("", key=f"code{i}")
@@ -193,20 +149,18 @@ if st.session_state.page == "registration":
                 "Championship": st.session_state.selected_championship
             })
 
-    # -------- Submit Button --------
+    # Submit
     if st.button("Submit All"):
-        error_found = False
         df = load_data()
-        count = 0
-
-        # Reset missing field markers
+        error_found = False
+        # Reset markers
         for i in range(num_players):
             st.session_state[f"name_empty_{i}"] = False
             st.session_state[f"code_empty_{i}"] = False
             st.session_state[f"belt_empty_{i}"] = False
             st.session_state[f"comp_empty_{i}"] = False
 
-        # Check for repeated Player Codes in form
+        # Validations
         codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
         if len(codes_in_form) != len(set(codes_in_form)):
             st.error("⚠️ Some Player Codes are repeated in this submission!")
@@ -214,63 +168,32 @@ if st.session_state.page == "registration":
 
         for athlete in athletes_data:
             idx = athlete["index"]
-            if not athlete["Athlete Name"]:
-                st.session_state[f"name_empty_{idx}"] = True
-                error_found = True
-            if not athlete["Player Code"]:
-                st.session_state[f"code_empty_{idx}"] = True
-                error_found = True
-            if not athlete["Belt Degree"]:
-                st.session_state[f"belt_empty_{idx}"] = True
-                error_found = True
-            if len(athlete["Competitions List"]) == 0:
-                st.session_state[f"comp_empty_{idx}"] = True
-                error_found = True
+            if not athlete["Athlete Name"]: st.session_state[f"name_empty_{idx}"] = True; error_found = True
+            if not athlete["Player Code"]: st.session_state[f"code_empty_{idx}"] = True; error_found = True
+            if not athlete["Belt Degree"]: st.session_state[f"belt_empty_{idx}"] = True; error_found = True
+            if len(athlete["Competitions List"]) == 0: st.session_state[f"comp_empty_{idx}"] = True; error_found = True
             if athlete["Player Code"] in df["Player Code"].values:
-                st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
-                error_found = True
+                st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!"); error_found = True
 
-        if not st.session_state.club.strip():
-            st.error("⚠️ Please enter a Club name before submitting!")
-            error_found = True
-        if not st.session_state.nationality.strip():
-            st.error("⚠️ Please enter Nationality before submitting!")
-            error_found = True
-        if not st.session_state.coach_name.strip():
-            st.error("⚠️ Please enter Coach Name before submitting!")
-            error_found = True
-        if not st.session_state.phone_number.strip():
-            st.error("⚠️ Please enter Phone Number before submitting!")
-            error_found = True
+        for key in ["club","nationality","coach_name","phone_number"]:
+            if not st.session_state[key].strip(): st.error(f"⚠️ Please enter {key.replace('_',' ').title()}"); error_found=True
 
         if error_found:
             st.error("⚠️ Please fix the errors highlighted in red!")
         else:
             for athlete in athletes_data:
                 df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
-                count += 1
             save_data(df)
 
-            # إعادة تعيين القيم بطريقة آمنة
-            for key in ["club", "nationality", "coach_name", "phone_number"]:
-                st.session_state[key] = ""
+            # إعادة تعيين كل القيم بطريقة آمنة
+            reset_dict = {key:"" for key in ["club","nationality","coach_name","phone_number"]}
             for i in range(num_players):
-                for k in ["name", "code", "belt", "comp", "dob", "sex"]:
-                    if k + str(i) in st.session_state:
-                        if k == "belt":
-                            st.session_state[k + str(i)] = belt_options[0]
-                        elif k == "comp":
-                            st.session_state[k + str(i)] = []
-                        elif k == "dob":
-                            st.session_state[k + str(i)] = date(2005,1,1)
-                        elif k == "sex":
-                            st.session_state[k + str(i)] = "Male"
-                        else:
-                            st.session_state[k + str(i)] = ""
+                reset_dict.update({f"name{i}":"","code{i}":"","belt{i}":belt_options[0],"comp{i}":[],"dob{i}":date(2005,1,1),"sex{i}":"Male"})
+            st.session_state.update(reset_dict)
 
-            st.success(f"{count} players registered successfully!")
+            st.success(f"{len(athletes_data)} players registered successfully!")
 
-# -------- Admin Panel (Sidebar) --------
+# -------- Admin --------
 st.sidebar.header("Admin Login")
 admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 
@@ -284,15 +207,5 @@ if admin_password == "mobadr90":
         excel_buffer = io.BytesIO()
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
-
-        if "selected_championship" in st.session_state:
-            championship_name = st.session_state.selected_championship.replace(" ", "_")
-        else:
-            championship_name = "athletes_data"
-
-        st.download_button(
-            label="📥 Download Excel",
-            data=excel_buffer,
-            file_name=f"{championship_name}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        champ_name = st.session_state.get("selected_championship","athletes_data").replace(" ","_")
+        st.download_button("📥 Download Excel", data=excel_buffer, file_name=f"{champ_name}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
