@@ -87,4 +87,4 @@ if st.session_state.page == "select_championship":
         ]
     )
 
-    if st.butt
+ 
