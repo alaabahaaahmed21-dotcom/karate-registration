@@ -19,6 +19,35 @@ def load_data():
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
+# -------- DARK THEME CSS --------
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #0e0e0e;
+        color: white;
+    }
+    .stTextInput>div>div>input {
+        background-color: #1e1e1e;
+        color: white;
+    }
+    .stSelectbox>div>div>div>select {
+        background-color: #1e1e1e;
+        color: white;
+    }
+    .stMultiselect>div>div>div>div>div {
+        background-color: #1e1e1e;
+        color: white;
+    }
+    .stDateInput>div>div>input {
+        background-color: #1e1e1e;
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # -------- SESSION STATE --------
 if "club" not in st.session_state:
     st.session_state.club = ""
@@ -53,11 +82,11 @@ athletes_data = []
 for i in range(num_players):
     with st.expander(f"Player {i+1}"):
         # Default label colors
-        name_color = "black"
-        code_color = "black"
-        comp_color = "black"
-        belt_color = "black"
-        
+        name_color = "white"
+        code_color = "white"
+        comp_color = "white"
+        belt_color = "white"
+
         if st.session_state.get(f"name_empty_{i}", False):
             name_color = "red"
         if st.session_state.get(f"code_empty_{i}", False):
@@ -116,7 +145,7 @@ if st.button("Submit All"):
             st.session_state[f"belt_empty_{i}"] = False
             st.session_state[f"comp_empty_{i}"] = False
 
-        # Check for errors
+        # Check for repeated Player Codes in form
         codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
         if len(codes_in_form) != len(set(codes_in_form)):
             st.error("⚠️ Some Player Codes are repeated in this submission!")
@@ -157,26 +186,23 @@ if st.button("Submit All"):
                 st.session_state[f"belt{i}"] = belt_options[0]
                 st.session_state[f"comp{i}"] = []
 
-# -------- Admin Panel --------
-page = st.sidebar.selectbox("Go to", ["Register Players", "Admin"])
+# -------- Admin Panel (Sidebar) --------
+st.sidebar.header("Admin Login")
+admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 
-if page == "Admin":
-    admin_password = st.text_input("Enter Admin Password", type="password")
-    if admin_password == "mobadr90":
-        st.success("Logged in as Admin ✅")
-        df = load_data()
-        if df.empty:
-            st.info("No data found yet.")
-        else:
-            st.dataframe(df, use_container_width=True)
-            excel_buffer = io.BytesIO()
-            df.to_excel(excel_buffer, index=False, engine='openpyxl')
-            excel_buffer.seek(0)
-            st.download_button(
-                label="📥 Download Excel",
-                data=excel_buffer,
-                file_name="athletes_data.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+if admin_password == "mobadr90":
+    st.sidebar.success("Logged in as Admin ✅")
+    df = load_data()
+    if df.empty:
+        st.info("No data found yet.")
     else:
-        st.warning("Enter the correct admin password.")
+        st.dataframe(df, use_container_width=True)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False, engine='openpyxl')
+        excel_buffer.seek(0)
+        st.download_button(
+            label="📥 Download Excel",
+            data=excel_buffer,
+            file_name="athletes_data.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
