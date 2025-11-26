@@ -41,6 +41,13 @@ body {
 # -------- PAGE LOGIC --------
 if "page" not in st.session_state:
     st.session_state.page = "select_championship"
+if st.session_state.page == "registration":
+
+    # ---- زر العودة ----
+    if st.button("⬅ Back to Championship Selection"):
+        st.session_state.page = "select_championship"
+        st.rerun()
+
 
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 # ---- عرض اللوجوهات ----
