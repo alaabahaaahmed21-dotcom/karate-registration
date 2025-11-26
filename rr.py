@@ -4,21 +4,8 @@ from datetime import date
 import io
 from pathlib import Path
 
-from PIL import Image
-
-img1 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM.jpeg")
-img2 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM (1).jpeg")
-img3 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM.jpeg")
-img4 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM (1).jpeg")
-# ---- عرض الصور في صف واحد ----
-images = [img1, img2, img3, img4]
-
-images = [img1, img2, img3, img4]
-cols = st.columns(len(images))  # عدد الأعمدة = عدد الصور
-
-for col, img in zip(cols, images):
-    col.image(img, width=100)  # 100 بكسل حجم صغير جدًا
-
+# -------- العنوان --------
+st.title("🏆African Championship Registration")
 
 # -------- FILE SETUP --------
 DATA_FILE = Path("athletes_data.csv")
