@@ -3,21 +3,7 @@ import pandas as pd
 from datetime import date
 import io
 from pathlib import Path
-from PIL import Image
 
-# -------- الصور (اللوجو) --------
-logo1 = Image.open("Phone/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-20251126-WA0001.jpg")
-logo2 = Image.open("Phone/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-20251126-WA0000.jpg")
-logo3 = Image.open("Phone/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-20251126-WA0004.jpg")
-logo4 = Image.open("Phone/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-20251126-WA0003.jpg")
-
-
-# عرضهم في صف أفقي
-col1, col2, col3 , col4 = st.columns(4)
-col1.image(logo1, width=120)
-col2.image(logo2, width=120)
-col3.image(logo3, width=120)
-col4.image(logo4, width=120)
 
 
 # -------- العنوان --------
