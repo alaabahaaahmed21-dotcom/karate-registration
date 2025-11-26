@@ -246,21 +246,28 @@ if st.session_state.page == "registration":
                     df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
                     count += 1
                 save_data(df)
-                st.success(f"{count} players registered successfully!")
+
+                # ---- حدد حالة النجاح ----
+                st.session_state["submit_success"] = f"{count} players registered successfully!"
 
                 # Clear all global inputs safely
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
                     if key in st.session_state:
                         st.session_state[key] = ""
 
-                # Clear individual player inputs safely (لحل خطأ Streamlit السابق)
+                # Clear individual player inputs safely
                 for i in range(num_players):
                     for k in ["name", "code", "belt", "comp", "dob", "sex"]:
                         key = f"{k}{i}"
                         if key in st.session_state:
                             del st.session_state[key]
 
-                st.rerun()  # لإعادة تحميل الصفحة بعد المسح
+                st.experimental_rerun()  # إعادة تحميل الصفحة بعد تعديل session_state
+
+# -------- عرض رسالة النجاح بعد rerun --------
+if "submit_success" in st.session_state:
+    st.success(st.session_state["submit_success"])
+    del st.session_state["submit_success"]
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
