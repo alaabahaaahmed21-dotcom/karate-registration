@@ -281,8 +281,4 @@ if admin_password == "mobadr90":
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-            label="📥 Download Excel",
-            data=excel_buffer,
-            file_name=f"{championship_name}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+         
