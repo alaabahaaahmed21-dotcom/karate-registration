@@ -11,7 +11,7 @@ img2 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM (1).jpeg")
 img3 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM.jpeg")
 img4 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM (1).jpeg")
 # ---- عرض الصور في صف واحد ----
-ccol1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.image(img1, width=100)  # 100 بكسل، ممكن تغيريه أصغر أو أكبر
