@@ -6,36 +6,36 @@ from pathlib import Path
 from PIL import Image
 
 
-# ---- تحميل الصور ----
-img1 = Image.open("logo1.png")
-img2 = Image.open("logo2.png")
-img3 = Image.open("logo3.png")
-img4 = Image.open("logo4.png")
 
-# ---- عرض الصور جنب بعض حتى على الموبايل ----
-# هنا بنستخدم CSS عشان نضمن إن ترتيبهم يكون صف واحد على كل الشاشات
+# ---- روابط الصور من GitHub RAW ----
+img1 = "https://raw.githubusercontent.com/USERNAME/REPO/main/logo1.png"
+img2 = "https://raw.githubusercontent.com/USERNAME/REPO/main/logo2.png"
+img3 = "https://raw.githubusercontent.com/USERNAME/REPO/main/logo3.png"
+img4 = "https://raw.githubusercontent.com/USERNAME/REPO/main/logo4.png"
+
+# ---- CSS لضبط عرض الصور جنب بعض ----
 st.markdown("""
 <style>
 .image-row {
     display: flex;
     justify-content: center;
-    gap: 8px;          /* المسافة بين الصور */
-    flex-wrap: nowrap; /* مهم جداً: يمنع نزول الصور تحت بعض */
+    gap: 10px;      /* المسافة بين الصور */
+    flex-wrap: nowrap; /* يمنع نزول الصور تحت بعض */
 }
 .image-row img {
-    width: 70px;       /* حجم الصورة */
+    width: 70px;   /* حجم الصورة */
     height: auto;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ---- HTML لعرض الصور جنب بعض ----
+# ---- HTML لعرض 4 صور جنب بعض ----
 st.markdown(f"""
 <div class="image-row">
-    <img src="logo1.png">
-    <img src="logo2.png">
-    <img src="logo3.png">
-    <img src="logo4.png">
+    <img src="{img1}">
+    <img src="{img2}">
+    <img src="{img3}">
+    <img src="{img4}">
 </div>
 """, unsafe_allow_html=True)
 
