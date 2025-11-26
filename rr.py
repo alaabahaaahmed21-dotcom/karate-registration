@@ -91,6 +91,7 @@ if st.session_state.page == "select_championship":
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
         st.rerun()
+    st.stop()
 
 # -------- Registration Page --------
 if st.session_state.page == "registration":
@@ -143,7 +144,7 @@ if st.session_state.page == "registration":
     # -------- Player Inputs --------
     for i in range(num_players):
         with st.expander(f"Player {i+1}"):
-
+            # Default label colors
             name_color = "black"
             code_color = "black"
             comp_color = "black"
@@ -207,12 +208,14 @@ if st.session_state.page == "registration":
             df = load_data()
             count = 0
 
+            # Reset missing field markers
             for i in range(num_players):
                 st.session_state[f"name_empty_{i}"] = False
                 st.session_state[f"code_empty_{i}"] = False
                 st.session_state[f"belt_empty_{i}"] = False
                 st.session_state[f"comp_empty_{i}"] = False
 
+            # Check for repeated Player Codes in form
             codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
             if len(codes_in_form) != len(set(codes_in_form)):
                 st.error("⚠️ Some Player Codes are repeated in this submission!")
@@ -232,10 +235,9 @@ if st.session_state.page == "registration":
                 if len(athlete["Competitions List"]) == 0:
                     st.session_state[f"comp_empty_{idx}"] = True
                     error_found = True
-                if "Player Code" in df.columns:
-                    if athlete["Player Code"] in df["Player Code"].values:
-                        st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
-                        error_found = True
+                if athlete["Player Code"] in df["Player Code"].values:
+                    st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
+                    error_found = True
 
             if error_found:
                 st.error("⚠️ Please fix the errors highlighted in red!")
@@ -244,26 +246,21 @@ if st.session_state.page == "registration":
                     df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
                     count += 1
                 save_data(df)
-
                 st.success(f"{count} players registered successfully!")
 
-                # Clear all global inputs
+                # Clear all global inputs safely
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
                     if key in st.session_state:
                         st.session_state[key] = ""
 
-                # Clear individual inputs
+                # Clear individual player inputs safely (لحل خطأ Streamlit السابق)
                 for i in range(num_players):
-                    if f"name{i}" in st.session_state:
-                        st.session_state[f"name{i}"] = ""
-                    if f"code{i}" in st.session_state:
-                        st.session_state[f"code{i}"] = ""
-                    if f"belt{i}" in st.session_state:
-                        st.session_state[f"belt{i}"] = belt_options[0]
-                    if f"comp{i}" in st.session_state:
-                        st.session_state[f"comp{i}"] = []
+                    for k in ["name", "code", "belt", "comp", "dob", "sex"]:
+                        key = f"{k}{i}"
+                        if key in st.session_state:
+                            del st.session_state[key]
 
-                st.rerun()
+                st.rerun()  # لإعادة تحميل الصفحة بعد المسح
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
@@ -277,9 +274,10 @@ if admin_password == "mobadr90":
     else:
         st.dataframe(df, use_container_width=True)
         excel_buffer = io.BytesIO()
-        df.to_excel(excel_buffer, index=False)
+        df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
 
+        # اسم الملف حسب البطولة المحددة
         if "selected_championship" in st.session_state:
             championship_name = st.session_state.selected_championship.replace(" ", "_")
         else:
