@@ -5,6 +5,10 @@ import io
 from pathlib import Path
 
 
+# -------- العنوان --------
+st.title("🏆African Championship Registration")
+
+
 # -------- FILE SETUP --------
 DATA_FILE = Path("athletes_data.csv")
 
