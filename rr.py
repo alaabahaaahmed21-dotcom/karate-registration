@@ -90,7 +90,7 @@ if st.session_state.page == "select_championship":
     if st.button("Next ➜"):
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
-        st.rerun()
+        st.experimental_rerun()
     st.stop()
 
 # -------- Registration Page --------
@@ -99,7 +99,7 @@ if st.session_state.page == "registration":
     # ---- زر العودة لصفحة اختيار البطولة ----
     if st.button("⬅ Back to Championship Selection"):
         st.session_state.page = "select_championship"
-        st.rerun()
+        st.experimental_rerun()
 
     # ---- عرض اللوجوهات ----
     st.markdown(f"""
@@ -144,7 +144,7 @@ if st.session_state.page == "registration":
     # -------- Player Inputs --------
     for i in range(num_players):
         with st.expander(f"Player {i+1}"):
-            # Default label colors
+
             name_color = "black"
             code_color = "black"
             comp_color = "black"
@@ -247,27 +247,27 @@ if st.session_state.page == "registration":
                     count += 1
                 save_data(df)
 
-                # ---- حدد حالة النجاح ----
-                st.session_state["submit_success"] = f"{count} players registered successfully!"
-
-                # Clear all global inputs safely
-                for key in ["club", "nationality", "coach_name", "phone_number"]:
-                    if key in st.session_state:
-                        st.session_state[key] = ""
-
-                # Clear individual player inputs safely
+                # إعادة تعيين القيم فقط دون حذف المفاتيح
+                st.session_state.club = ""
+                st.session_state.nationality = ""
+                st.session_state.coach_name = ""
+                st.session_state.phone_number = ""
                 for i in range(num_players):
-                    for k in ["name", "code", "belt", "comp", "dob", "sex"]:
-                        key = f"{k}{i}"
-                        if key in st.session_state:
-                            del st.session_state[key]
+                    st.session_state[f"name{i}"] = ""
+                    st.session_state[f"code{i}"] = ""
+                    st.session_state[f"belt{i}"] = belt_options[0]
+                    st.session_state[f"comp{i}"] = []
+                    st.session_state[f"dob{i}"] = date(2005,1,1)
+                    st.session_state[f"sex{i}"] = "Male"
 
-                st.experimental_rerun()  # إعادة تحميل الصفحة بعد تعديل session_state
+                # رسالة نجاح
+                st.session_state.submit_success = f"{count} players registered successfully!"
+                st.experimental_rerun()
 
-# -------- عرض رسالة النجاح بعد rerun --------
+# -------- Show success message if exists --------
 if "submit_success" in st.session_state:
-    st.success(st.session_state["submit_success"])
-    del st.session_state["submit_success"]
+    st.success(st.session_state.submit_success)
+    del st.session_state.submit_success
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
