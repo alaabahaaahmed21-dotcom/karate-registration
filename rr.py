@@ -55,15 +55,16 @@ def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
 # -------- SESSION STATE DEFAULTS --------
-for key in ["club", "nationality", "coach_name", "phone_number"]:
+defaults = ["page", "club", "nationality", "coach_name", "phone_number"]
+for key in defaults:
     if key not in st.session_state:
-        st.session_state[key] = ""
-if "page" not in st.session_state:
-    st.session_state.page = "select_championship"
+        if key == "page":
+            st.session_state[key] = "select_championship"
+        else:
+            st.session_state[key] = ""
 
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 if st.session_state.page == "select_championship":
-
     # ---- عرض اللوجوهات أول الصفحة ----
     st.markdown(f"""
     <div class="image-row">
@@ -75,7 +76,6 @@ if st.session_state.page == "select_championship":
     """, unsafe_allow_html=True)
 
     st.title("🏆 Select Championship")
-
     championship = st.selectbox(
         "Please select the championship you want to register for:",
         [
@@ -141,21 +141,22 @@ if st.session_state.page == "registration":
 
     # -------- Player Inputs --------
     for i in range(num_players):
-        with st.expander(f"Player {i+1}"):
-            # Default label colors
-            name_color = "black"
-            code_color = "black"
-            comp_color = "black"
-            belt_color = "black"
+        # Initialize session_state keys for each player safely
+        for key_suffix in ["name", "code", "belt", "comp"]:
+            k = f"{key_suffix}{i}"
+            if k not in st.session_state:
+                if key_suffix == "belt":
+                    st.session_state[k] = belt_options[0]
+                elif key_suffix == "comp":
+                    st.session_state[k] = []
+                else:
+                    st.session_state[k] = ""
 
-            if st.session_state.get(f"name_empty_{i}", False):
-                name_color = "red"
-            if st.session_state.get(f"code_empty_{i}", False):
-                code_color = "red"
-            if st.session_state.get(f"belt_empty_{i}", False):
-                belt_color = "red"
-            if st.session_state.get(f"comp_empty_{i}", False):
-                comp_color = "red"
+        with st.expander(f"Player {i+1}"):
+            name_color = "red" if st.session_state.get(f"name_empty_{i}", False) else "black"
+            code_color = "red" if st.session_state.get(f"code_empty_{i}", False) else "black"
+            belt_color = "red" if st.session_state.get(f"belt_empty_{i}", False) else "black"
+            comp_color = "red" if st.session_state.get(f"comp_empty_{i}", False) else "black"
 
             st.markdown(f"<label style='color:{name_color}'>Athlete Name</label>", unsafe_allow_html=True)
             athlete_name = st.text_input("", key=f"name{i}")
@@ -193,6 +194,7 @@ if st.session_state.page == "registration":
 
     # -------- Submit Button --------
     if st.button("Submit All"):
+        # التحقق من الحقول العامة
         if not st.session_state.club.strip():
             st.error("⚠️ Please enter a Club name before submitting!")
         elif not st.session_state.nationality.strip():
@@ -208,10 +210,8 @@ if st.session_state.page == "registration":
 
             # Reset missing field markers
             for i in range(num_players):
-                st.session_state[f"name_empty_{i}"] = False
-                st.session_state[f"code_empty_{i}"] = False
-                st.session_state[f"belt_empty_{i}"] = False
-                st.session_state[f"comp_empty_{i}"] = False
+                for key in ["name_empty", "code_empty", "belt_empty", "comp_empty"]:
+                    st.session_state[f"{key}_{i}"] = False
 
             # Check for repeated Player Codes in form
             codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
@@ -246,15 +246,16 @@ if st.session_state.page == "registration":
                 save_data(df)
                 st.success(f"{count} players registered successfully!")
 
-                # Clear all global inputs safely
-                for key in ["club", "nationality", "coach_name", "phone_number"]:
-                    st.session_state[key] = ""
-
-                # Clear individual player inputs safely
+                # ---- Clear global and player inputs ----
+                st.session_state.club = ""
+                st.session_state.nationality = ""
+                st.session_state.coach_name = ""
+                st.session_state.phone_number = ""
                 for i in range(num_players):
-                    for k, default in [(f"name{i}", ""), (f"code{i}", ""), (f"belt{i}", belt_options[0]), (f"comp{i}", [])]:
-                        if k in st.session_state:
-                            st.session_state[k] = default
+                    st.session_state[f"name{i}"] = ""
+                    st.session_state[f"code{i}"] = ""
+                    st.session_state[f"belt{i}"] = belt_options[0]
+                    st.session_state[f"comp{i}"] = []
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
@@ -270,13 +271,7 @@ if admin_password == "mobadr90":
         excel_buffer = io.BytesIO()
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
-
-        # اسم الملف حسب البطولة المحددة
-        if "selected_championship" in st.session_state:
-            championship_name = st.session_state.selected_championship.replace(" ", "_")
-        else:
-            championship_name = "athletes_data"
-
+        championship_name = st.session_state.get("selected_championship", "athletes_data").replace(" ", "_")
         st.download_button(
             label="📥 Download Excel",
             data=excel_buffer,
