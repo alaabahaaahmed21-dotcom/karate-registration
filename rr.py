@@ -38,10 +38,6 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
-# -------- PAGE LOGIC --------
-if "page" not in st.session_state:
-    st.session_state.page = "select_championship"
-
 # -------- FILE SETUP --------
 DATA_FILE = Path("athletes_data.csv")
 
@@ -62,6 +58,8 @@ def save_data(df):
 for key in ["club", "nationality", "coach_name", "phone_number"]:
     if key not in st.session_state:
         st.session_state[key] = ""
+if "page" not in st.session_state:
+    st.session_state.page = "select_championship"
 
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 if st.session_state.page == "select_championship":
@@ -144,6 +142,7 @@ if st.session_state.page == "registration":
     # -------- Player Inputs --------
     for i in range(num_players):
         with st.expander(f"Player {i+1}"):
+            # Default label colors
             name_color = "black"
             code_color = "black"
             comp_color = "black"
@@ -214,7 +213,7 @@ if st.session_state.page == "registration":
                 st.session_state[f"belt_empty_{i}"] = False
                 st.session_state[f"comp_empty_{i}"] = False
 
-            # Check for repeated Player Codes
+            # Check for repeated Player Codes in form
             codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
             if len(codes_in_form) != len(set(codes_in_form)):
                 st.error("⚠️ Some Player Codes are repeated in this submission!")
@@ -247,20 +246,15 @@ if st.session_state.page == "registration":
                 save_data(df)
                 st.success(f"{count} players registered successfully!")
 
-                # Clear all global inputs
+                # Clear all global inputs safely
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
-                    if key in st.session_state:
-                        st.session_state[key] = ""
-                # Clear individual inputs
+                    st.session_state[key] = ""
+
+                # Clear individual player inputs safely
                 for i in range(num_players):
-                    if f"name{i}" in st.session_state:
-                        st.session_state[f"name{i}"] = ""
-                    if f"code{i}" in st.session_state:
-                        st.session_state[f"code{i}"] = ""
-                    if f"belt{i}" in st.session_state:
-                        st.session_state[f"belt{i}"] = belt_options[0]
-                    if f"comp{i}" in st.session_state:
-                        st.session_state[f"comp{i}"] = []
+                    for k, default in [(f"name{i}", ""), (f"code{i}", ""), (f"belt{i}", belt_options[0]), (f"comp{i}", [])]:
+                        if k in st.session_state:
+                            st.session_state[k] = default
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
@@ -277,7 +271,11 @@ if admin_password == "mobadr90":
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
 
-        championship_name = st.session_state.get("selected_championship", "athletes_data").replace(" ", "_")
+        # اسم الملف حسب البطولة المحددة
+        if "selected_championship" in st.session_state:
+            championship_name = st.session_state.selected_championship.replace(" ", "_")
+        else:
+            championship_name = "athletes_data"
 
         st.download_button(
             label="📥 Download Excel",
