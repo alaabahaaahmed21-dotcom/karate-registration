@@ -59,7 +59,7 @@ for key in ["club", "nationality", "trainer_name", "phone_number"]:
     if key not in st.session_state:
         st.session_state[key] = ""
 
-st.title("🏆 Karate Championship Registration")
+
 
 # -------- Club, Nationality, Trainer, Phone Inputs --------
 st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
