@@ -248,19 +248,23 @@ if st.session_state.page == "registration":
                 save_data(df)
                 st.success(f"{count} players registered successfully!")
 
-                # Clear all global inputs safely
+                # -------- Clear all inputs safely after submit --------
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
-                    if key in st.session_state:
-                        st.session_state[key] = ""
+                    st.session_state[key] = ""
 
-                # Clear individual player inputs safely (لحل خطأ Streamlit السابق)
                 for i in range(num_players):
                     for k in ["name", "code", "belt", "comp", "dob", "sex"]:
                         key = f"{k}{i}"
                         if key in st.session_state:
                             del st.session_state[key]
 
-                st.rerun()  # لإعادة تحميل الصفحة بعد المسح
+                    # Reset error markers
+                    for k in ["name_empty", "code_empty", "belt_empty", "comp_empty"]:
+                        key = f"{k}_{i}"
+                        if key in st.session_state:
+                            del st.session_state[key]
+
+                st.rerun()  # لإعادة تحميل الصفحة بعد التفريغ
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
