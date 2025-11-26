@@ -10,7 +10,7 @@ img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registr
 img3 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo3.png"
 img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo4.png"
 
-# ---- CSS للصور جنب بعض ----
+# ---- CSS للصور والخلفية ----
 st.markdown("""
 <style>
 .image-row {
@@ -45,6 +45,19 @@ if "page" not in st.session_state:
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 if st.session_state.page == "select_championship":
     st.title("🏆 Select Championship")
+
+    # ---- عرض اللوجوهات ----
+    st.markdown(f"""
+    <div class="image-row">
+        <img src="{img1}">
+        <img src="{img2}">
+        <img src="{img3}">
+        <img src="{img4}">
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.write("")  # عنصر إضافي للتأكد من عرض HTML
+
     championship = st.selectbox(
         "Please select the championship you want to register for:",
         [
@@ -254,9 +267,16 @@ if admin_password == "mobadr90":
         excel_buffer = io.BytesIO()
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
+
+        # اسم الملف حسب البطولة المحددة (أول صف في البيانات)
+        if "selected_championship" in st.session_state:
+            championship_name = st.session_state.selected_championship.replace(" ", "_")
+        else:
+            championship_name = "athletes_data"
+
         st.download_button(
             label="📥 Download Excel",
             data=excel_buffer,
-            file_name="athletes_data.xlsx",
+            file_name=f"{championship_name}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
