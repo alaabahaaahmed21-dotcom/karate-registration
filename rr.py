@@ -15,7 +15,7 @@ def load_data():
         return pd.read_csv(DATA_FILE)
     else:
         return pd.DataFrame(columns=[
-            "Athlete Name", "Club", "Nationality", "Trainer Name", "Phone Number",
+            "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
             "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
         ])
 
@@ -52,17 +52,17 @@ st.markdown(
 )
 
 # -------- SESSION STATE --------
-for key in ["club", "nationality", "trainer_name", "phone_number"]:
+for key in ["club", "nationality", "coach_name", "phone_number"]:
     if key not in st.session_state:
         st.session_state[key] = ""
 
 
 
-# -------- Club, Nationality, Trainer, Phone Inputs --------
+# -------- Club, Nationality, Coach, Phone Inputs --------
 st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
 st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
-st.session_state.trainer_name = st.text_input("Enter Trainer Name for all players", value=st.session_state.trainer_name)
-st.session_state.phone_number = st.text_input("Enter Phone Number for the Trainer", value=st.session_state.phone_number)
+st.session_state.Coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
+st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
 
 # Number of players
 num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
