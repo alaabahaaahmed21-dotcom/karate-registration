@@ -61,7 +61,7 @@ for key in ["club", "nationality", "coach_name", "phone_number"]:
 # -------- Club, Nationality, Coach, Phone Inputs --------
 st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
 st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
-st.session_state.Coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
+st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
 st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
 
 # Number of players
