@@ -91,6 +91,99 @@ if st.session_state.page == "select_championship":
 
     st.stop()
 
+# -------- FILE SETUP --------import streamlit as st
+import pandas as pd
+from datetime import date
+import io
+from pathlib import Path
+from PIL import Image
+
+# ---- روابط الصور من GitHub RAW ----
+img1 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo1.png"
+img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo2.png"
+img3 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo3.png"
+img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo4.png"
+
+# ---- CSS لضبط عرض الصور جنب بعض ----
+st.markdown("""
+<style>
+.image-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+.image-row img {
+    width: 70px;
+    height: auto;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<div class="image-row">
+    <img src="{img1}">
+    <img src="{img2}">
+    <img src="{img3}">
+    <img src="{img4}">
+</div>
+""", unsafe_allow_html=True)
+
+# -------- LIGHT THEME CSS --------
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: white;
+        color: black;
+    }
+    .stTextInput>div>div>input, 
+    .stNumberInput>div>div>input {
+        background-color: #f0f0f0;
+        color: black;
+    }
+    .stSelectbox>div>div>div>select {
+        background-color: #f0f0f0;
+        color: black;
+    }
+    .stMultiselect>div>div>div>div>div {
+        background-color: #f0f0f0;
+        color: black;
+    }
+    .stDateInput>div>div>input {
+        background-color: #f0f0f0;
+        color: black;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# -------- PAGE LOGIC --------
+if "page" not in st.session_state:
+    st.session_state.page = "select_championship"
+
+# -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
+if st.session_state.page == "select_championship":
+
+    st.title("🏆 Select Championship")
+
+    championship = st.selectbox(
+        "Please select the championship you want to register for:",
+        [
+            "African Master Course",
+            "North Africa Traditional Karate Championship",
+            "Unified Karate Championship (General)"
+        ]
+    )
+
+    if st.button("Next ➜"):
+        st.session_state.selected_championship = championship
+        st.session_state.page = "registration"
+        st.rerun()
+
+    st.stop()
+
 # -------- FILE SETUP --------
 DATA_FILE = Path("athletes_data.csv")
 
@@ -137,7 +230,11 @@ belt_options = [
 athletes_data = []
 
 # -------- Player Inputs --------
-st.title(f"🏆 Registration Form: {st.session_state.selected_championship}")
+# --- العنوان بخط أصغر وعلى اليسار ---
+st.markdown(
+    f"<h3 style='text-align: left; color: black;'>🏆 Registration Form: {st.session_state.selected_championship}</h3>",
+    unsafe_allow_html=True
+)
 
 for i in range(num_players):
     with st.expander(f"Player {i+1}"):
@@ -274,3 +371,4 @@ if admin_password == "mobadr90":
             file_name="athletes_data.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
