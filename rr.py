@@ -3,6 +3,42 @@ import pandas as pd
 from datetime import date
 import io
 from pathlib import Path
+from PIL import Image
+
+
+# ---- تحميل الصور ----
+img1 = Image.open("logo1.png")
+img2 = Image.open("logo2.png")
+img3 = Image.open("logo3.png")
+img4 = Image.open("logo4.png")
+
+# ---- عرض الصور جنب بعض حتى على الموبايل ----
+# هنا بنستخدم CSS عشان نضمن إن ترتيبهم يكون صف واحد على كل الشاشات
+st.markdown("""
+<style>
+.image-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;          /* المسافة بين الصور */
+    flex-wrap: nowrap; /* مهم جداً: يمنع نزول الصور تحت بعض */
+}
+.image-row img {
+    width: 70px;       /* حجم الصورة */
+    height: auto;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---- HTML لعرض الصور جنب بعض ----
+st.markdown(f"""
+<div class="image-row">
+    <img src="logo1.png">
+    <img src="logo2.png">
+    <img src="logo3.png">
+    <img src="logo4.png">
+</div>
+""", unsafe_allow_html=True)
+
 
 # -------- العنوان --------
 st.title("🏆African Championship Registration")
