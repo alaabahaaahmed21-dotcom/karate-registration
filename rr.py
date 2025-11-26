@@ -4,7 +4,27 @@ from datetime import date
 import io
 from pathlib import Path
 
+from PIL import Image
 
+img1 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM.jpeg")
+img2 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM (1).jpeg")
+img3 = Image.open("WhatsApp Image 2025-11-26 at 2.44.02 PM.jpeg")
+img4 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM (1).jpeg")
+# ---- عرض الصور في صف واحد ----
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.image(img1, use_column_width=True)
+
+with col2:
+    st.image(img2, use_column_width=True)
+
+with col3:
+    st.image(img3, use_column_width=True)
+
+with col4:
+    st.image(img4, use_column_width=True)
+    
 # -------- العنوان --------
 st.title("🏆African Championship Registration")
 
