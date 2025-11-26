@@ -6,10 +6,10 @@ from pathlib import Path
 from PIL import Image
 
 # -------- الصور (اللوجو) --------
-logo1 = Image.open("IMG-20251126-WA0003.png")
-logo2 = Image.open("IMG-20251126-WA0004.png")
-logo3 = Image.open("IMG-20251126-WA0000.png")
-logo4 = Image.open("IMG-20251126-WA0001.png")
+logo1 = Image.open("Phone/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-20251126-WA0001.jpg")
+logo2 = Image.open("Phone/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-20251126-WA0000.jpg")
+logo3 = Image.open("Phone/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-20251126-WA0004.jpg")
+logo4 = Image.open("Phone/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-20251126-WA0003.jpg")
 
 
 # عرضهم في صف أفقي
