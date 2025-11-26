@@ -41,16 +41,12 @@ body {
 # -------- PAGE LOGIC --------
 if "page" not in st.session_state:
     st.session_state.page = "select_championship"
-if st.session_state.page == "registration":
-
-    # ---- زر العودة ----
-    if st.button("⬅ Back to Championship Selection"):
-        st.session_state.page = "select_championship"
-        st.rerun()
-
 
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
-# ---- عرض اللوجوهات ----
+if st.session_state.page == "select_championship":
+    st.title("🏆 Select Championship")
+
+    # ---- عرض اللوجوهات ----
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -62,10 +58,6 @@ if st.session_state.page == "registration":
 
     st.write("")  # عنصر إضافي للتأكد من عرض HTML
 
-if st.session_state.page == "select_championship":
-    st.title("🏆 Select Championship")
-
-    
     championship = st.selectbox(
         "Please select the championship you want to register for:",
         [
@@ -283,6 +275,12 @@ if admin_password == "mobadr90":
             championship_name = "athletes_data"
 
         st.download_button(
+            label="📥 Download Excel",
+            data=excel_buffer,
+            file_name=f"{championship_name}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
             label="📥 Download Excel",
             data=excel_buffer,
             file_name=f"{championship_name}.xlsx",
