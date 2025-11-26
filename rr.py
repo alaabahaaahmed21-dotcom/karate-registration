@@ -43,10 +43,7 @@ if "page" not in st.session_state:
     st.session_state.page = "select_championship"
 
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
-if st.session_state.page == "select_championship":
-    st.title("🏆 Select Championship")
-
-    # ---- عرض اللوجوهات ----
+# ---- عرض اللوجوهات ----
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -58,6 +55,10 @@ if st.session_state.page == "select_championship":
 
     st.write("")  # عنصر إضافي للتأكد من عرض HTML
 
+if st.session_state.page == "select_championship":
+    st.title("🏆 Select Championship")
+
+    
     championship = st.selectbox(
         "Please select the championship you want to register for:",
         [
