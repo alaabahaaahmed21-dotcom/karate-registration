@@ -13,11 +13,11 @@ img4 = Image.open("WhatsApp Image 2025-11-26 at 2.28.15 PM (1).jpeg")
 # ---- عرض الصور في صف واحد ----
 images = [img1, img2, img3, img4]
 
-for img in images:
-    st.image(img, width=150)  # كل صورة في صف جديد وحجم صغير
+images = [img1, img2, img3, img4]
+cols = st.columns(len(images))  # عدد الأعمدة = عدد الصور
 
-# -------- العنوان --------
-st.title("🏆African Championship Registration")
+for col, img in zip(cols, images):
+    col.image(img, width=100)  # 100 بكسل حجم صغير جدًا
 
 
 # -------- FILE SETUP --------
