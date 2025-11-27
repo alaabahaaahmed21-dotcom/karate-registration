@@ -275,15 +275,25 @@ if st.session_state.page == "registration":
         df = load_data()
         error = False
         errors_list = []
-        seen_codes = set(df["Player Code"].astype(str).values)
 
+        # إنشاء set للكودات داخل نفس البطولة
+        current_champ_codes = set(
+            df[df["Championship"] == st.session_state.selected_championship]["Player Code"].astype(str).values
+        )
+
+        # التحقق لكل لاعب
         for athlete in athletes_data:
             idx = athlete["index"]
             name = athlete.get("Athlete Name","").strip()
             code = str(athlete.get("Player Code","")).strip()
             belt = athlete.get("Belt Degree","")
             comps = athlete.get("Competitions List", [])
+            club = athlete.get("Club","").strip()
+            nationality = athlete.get("Nationality","").strip()
+            coach = athlete.get("Coach Name","").strip()
+            phone = athlete.get("Phone Number","").strip()
 
+            # التحقق من الحقول الفارغة
             if not name:
                 errors_list.append(f"Player #{idx+1}: Athlete Name is missing.")
                 error = True
@@ -293,21 +303,32 @@ if st.session_state.page == "registration":
             if not belt:
                 errors_list.append(f"Player #{idx+1}: Belt Degree is missing.")
                 error = True
+            if st.session_state.selected_championship != "African Master Course" and len(comps) == 0:
+                errors_list.append(f"Player #{idx+1} ({name or 'no name'}): Please select at least one competition.")
+                error = True
+            if not club:
+                errors_list.append(f"Player #{idx+1}: Club is missing.")
+                error = True
+            if not nationality:
+                errors_list.append(f"Player #{idx+1}: Nationality is missing.")
+                error = True
+            if not coach and st.session_state.selected_championship != "African Master Course":
+                errors_list.append(f"Player #{idx+1}: Coach Name is missing.")
+                error = True
+            if not phone:
+                errors_list.append(f"Player #{idx+1}: Phone Number is missing.")
+                error = True
 
-            if st.session_state.selected_championship != "African Master Course":
-                if len(comps)==0:
-                    errors_list.append(f"Player #{idx+1} ({name or 'no name'}): Please select at least one competition.")
-                    error = True
-
-            if code and code in seen_codes:
-                errors_list.append(f"Player #{idx+1}: Player Code '{code}' already exists!")
+            # التحقق من تكرار الكود داخل نفس البطولة فقط
+            if code and code in current_champ_codes:
+                errors_list.append(f"Player #{idx+1}: Player Code '{code}' already exists in this championship!")
                 error = True
             else:
-                if code: seen_codes.add(code)
+                if code: current_champ_codes.add(code)
 
-        # Check duplicates inside the same batch
+        # تحقق من التكرار داخل نفس الدفعة الحالية
         batch_codes = [str(a.get("Player Code","")).strip() for a in athletes_data if a.get("Player Code","").strip()!=""]
-        dup_in_batch = {c for c in batch_codes if batch_codes.count(c)>1}
+        dup_in_batch = {c for c in batch_codes if batch_codes.count(c) > 1}
         for dcode in dup_in_batch:
             indices = [i+1 for i,a in enumerate(athletes_data) if str(a.get("Player Code","")).strip()==dcode]
             errors_list.append(f"Duplicate in submission: Player Code '{dcode}' used in players {indices}.")
@@ -325,7 +346,7 @@ if st.session_state.page == "registration":
         save_data(df)
         st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-        # Reset inputs
+        # Reset all fields
         for key in ["club","nationality","coach_name","phone_number"]:
             st.session_state[key] = ""
         for k in list(st.session_state.keys()):
