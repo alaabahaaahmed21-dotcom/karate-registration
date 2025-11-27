@@ -56,6 +56,7 @@ def load_data():
         for col in required_cols:
             if col not in df.columns:
                 df[col] = ""
+        # return columns in canonical order
         return df[required_cols]
     else:
         return pd.DataFrame(columns=required_cols)
@@ -94,7 +95,7 @@ if st.session_state.page == "select_championship":
     if st.button("Next ➜"):
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
-        st.rerun()
+        st.experimental_rerun()
     st.stop()
 
 # -------- Registration Page --------
@@ -102,7 +103,7 @@ if st.session_state.page == "registration":
 
     if st.button("⬅ Back to Championship Selection"):
         st.session_state.page = "select_championship"
-        st.rerun()
+        st.experimental_rerun()
 
     st.markdown(f"""
     <div class="image-row">
@@ -172,14 +173,19 @@ if st.session_state.page == "registration":
                 st.markdown(f"<label style='color:{belt_color}'>Belt Degree</label>", unsafe_allow_html=True)
                 belt_degree = st.selectbox("", belt_options, key=f"belt{key_suffix}")
 
+                # add index so validation highlights correctly
                 athletes_data.append({
-                    "Athlete Name": athlete_name,
+                    "Athlete Name": athlete_name.strip(),
+                    "Club": "",
                     "Nationality": nationality.strip(),
+                    "Coach Name": "",
                     "Phone Number": phone_number.strip(),
                     "Date of Birth": str(dob),
                     "Sex": sex,
-                    "Player Code": player_code,
+                    "Player Code": player_code.strip(),
                     "Belt Degree": belt_degree,
+                    "Competitions": "",
+                    "index": i,
                     "Championship": f"African Master Course - {course_type}"
                 })
 
@@ -242,14 +248,14 @@ if st.session_state.page == "registration":
                 competitions = st.multiselect("", competitions_list, key=f"comp{key_suffix}")
 
                 athletes_data.append({
-                    "Athlete Name": athlete_name,
+                    "Athlete Name": athlete_name.strip(),
                     "Club": st.session_state.club.strip(),
                     "Nationality": st.session_state.nationality.strip(),
                     "Coach Name": st.session_state.coach_name.strip(),
                     "Phone Number": st.session_state.phone_number.strip(),
                     "Date of Birth": str(dob),
                     "Sex": sex,
-                    "Player Code": player_code,
+                    "Player Code": player_code.strip(),
                     "Belt Degree": belt_degree,
                     "Competitions": ", ".join(competitions),
                     "Competitions List": competitions,
@@ -263,18 +269,15 @@ if st.session_state.page == "registration":
         df = load_data()
         count = 0
 
-        for i in range(num_players):
+        # reset flags for current number of players
+        for i in range(max(1, len(athletes_data))):
             st.session_state[f"name_empty_{i}"] = False
             st.session_state[f"code_empty_{i}"] = False
             st.session_state[f"belt_empty_{i}"] = False
             if st.session_state.selected_championship != "African Master Course":
                 st.session_state[f"comp_empty_{i}"] = False
 
-        codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
-        if len(codes_in_form) != len(set(codes_in_form)):
-            st.error("⚠️ Some Player Codes are repeated in this submission!")
-            error_found = True
-
+        # First: validate required fields (mark empties)
         for athlete in athletes_data:
             idx = athlete.get("index", 0)
             if not athlete["Athlete Name"]:
@@ -289,15 +292,32 @@ if st.session_state.page == "registration":
             if st.session_state.selected_championship != "African Master Course" and len(athlete.get("Competitions List", [])) == 0:
                 st.session_state[f"comp_empty_{idx}"] = True
                 error_found = True
-            if athlete["Player Code"] in df["Player Code"].values:
-                st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
-                error_found = True
+
+        # build codes list excluding empty strings
+        codes_in_form = [a["Player Code"] for a in athletes_data if a["Player Code"]]
+
+        # check duplicates inside this submission
+        dupes = [code for code in set(codes_in_form) if codes_in_form.count(code) > 1]
+        if dupes:
+            st.error(f"⚠️ Some Player Codes are repeated in this submission: {', '.join(dupes)}")
+            error_found = True
+
+        # check duplicates against saved file (only if the code is non-empty)
+        existing_codes = set(df["Player Code"].astype(str).tolist()) if not df.empty else set()
+        conflicts = [code for code in codes_in_form if code in existing_codes]
+        if conflicts:
+            st.error(f"⚠️ These Player Codes already exist: {', '.join(conflicts)}")
+            error_found = True
 
         if error_found:
             st.error("⚠️ Please fix the errors highlighted in red!")
         else:
             for athlete in athletes_data:
-                df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+                # remove helper keys before saving (like Competitions List, index)
+                row = athlete.copy()
+                row.pop("Competitions List", None)
+                row.pop("index", None)
+                df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
                 count += 1
             save_data(df)
             st.success(f"{count} players registered successfully!")
@@ -307,7 +327,7 @@ if st.session_state.page == "registration":
                 st.session_state[key] = ""
 
             st.session_state.submit_count += 1
-            st.rerun()
+            st.experimental_rerun()
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
