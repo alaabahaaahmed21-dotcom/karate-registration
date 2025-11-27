@@ -101,8 +101,8 @@ if st.session_state.page == "select_championship":
         "Please select the championship you want to register for:",
         [
             "African Master Course",
-            "North Africa Traditional Karate Championship",
-            "United Karate Championship (General)"
+            "African Open Traditional Karate Championship",
+            "North Africa Unitied Karate Championship (General)"
         ]
     )
 
