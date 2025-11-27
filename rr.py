@@ -311,20 +311,38 @@ if st.session_state.page == "registration":
                 st.session_state[f"comp_empty_{idx}"] = True
                 error_found = True
 
-        # build codes list excluding empty strings
-        codes_in_form = [a["Player Code"] for a in athletes_data if a["Player Code"]]
+        # Build (code, championship) pairs for this submission
+        pairs_in_form = [
+            (a["Player Code"], a["Championship"])
+            for a in athletes_data
+            if a["Player Code"]
+        ]
 
-        # check duplicates inside this submission
-        dupes = [code for code in set(codes_in_form) if codes_in_form.count(code) > 1]
-        if dupes:
-            st.error(f"⚠️ Some Player Codes are repeated in this submission: {', '.join(dupes)}")
+        # check duplicates inside SAME submission
+        from collections import Counter
+        counter_pairs = Counter(pairs_in_form)
+        dup_pairs = [pair for pair, cnt in counter_pairs.items() if cnt > 1]
+
+        if dup_pairs:
+            nice = [f"{code} (in {champ})" for code, champ in dup_pairs]
+            st.error(f"⚠️ Same player code repeated twice in the same championship: {', '.join(nice)}")
             error_found = True
 
-        # check duplicates against saved file
-        existing_codes = set(df["Player Code"].astype(str).tolist()) if not df.empty else set()
-        conflicts = [code for code in codes_in_form if code in existing_codes]
+        # check duplicates against saved file based on (code + championship)
+        if not df.empty:
+            existing_pairs = set(zip(df["Player Code"].astype(str), df["Championship"].astype(str)))
+        else:
+            existing_pairs = set()
+
+        conflicts = [
+            (code, champ)
+            for code, champ in pairs_in_form
+            if (code, champ) in existing_pairs
+        ]
+
         if conflicts:
-            st.error(f"⚠️ These Player Codes already exist: {', '.join(conflicts)}")
+            nice_conf = [f"{code} (in {champ})" for code, champ in conflicts]
+            st.error(f"⚠️ These Player Codes already registered in the same championship: {', '.join(nice_conf)}")
             error_found = True
 
         if error_found:
@@ -336,6 +354,7 @@ if st.session_state.page == "registration":
                 row.pop("index", None)
                 df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
                 count += 1
+
             save_data(df)
             st.success(f"{count} players registered successfully!")
 
