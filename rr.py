@@ -49,7 +49,7 @@ def load_data():
     required_cols = [
         "Championship",
         "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
-        "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions", "Course Type"
+        "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
     ]
     if DATA_FILE.exists():
         df = pd.read_csv(DATA_FILE)
@@ -70,6 +70,7 @@ for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]
 
 # -------- FIRST PAGE: SELECT CHAMPIONSHIP --------
 if st.session_state.page == "select_championship":
+
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -117,100 +118,144 @@ if st.session_state.page == "registration":
         unsafe_allow_html=True
     )
 
-    num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
-
-    competitions_list = [
-        "Individual Kata","Kata Team","Individual Kumite","Fuko Go",
-        "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"
-    ]
-
-    belt_options = [
-        "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
-        "Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3",
-        "Kyu Junior brown 2","Kyu Junior brown 1","Kyu Senior yellow 7","Kyu Senior yellow 6",
-        "Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2",
-        "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
-    ]
-
     athletes_data = []
     submit_count = st.session_state.submit_count
 
-    # -------- Player Inputs with dynamic keys --------
-    for i in range(num_players):
-        with st.expander(f"Player {i+1}"):
-            key_suffix = f"_{submit_count}_{i}"
-            # Default label colors
-            name_color = "black"
-            code_color = "black"
-            belt_color = "black"
-            comp_color = "black"
+    # -------- African Master Course FORM --------
+    if st.session_state.selected_championship == "African Master Course":
 
-            if st.session_state.get(f"name_empty_{i}", False):
-                name_color = "red"
-            if st.session_state.get(f"code_empty_{i}", False):
-                code_color = "red"
-            if st.session_state.get(f"belt_empty_{i}", False):
-                belt_color = "red"
-            if st.session_state.get(f"comp_empty_{i}", False):
-                comp_color = "red"
+        course_type = st.selectbox("Choose course type:", ["Master", "General"])
 
-            st.markdown(f"<label style='color:{name_color}'>Athlete Name</label>", unsafe_allow_html=True)
-            athlete_name = st.text_input("", key=f"name{key_suffix}")
+        num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
 
-            st.markdown("<label>Date of Birth</label>", unsafe_allow_html=True)
-            dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{key_suffix}")
+        belt_options = [
+            "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
+            "Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3",
+            "Kyu Junior brown 2","Kyu Junior brown 1","Kyu Senior yellow 7","Kyu Senior yellow 6",
+            "Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2",
+            "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
+        ]
 
-            st.markdown("<label>Sex</label>", unsafe_allow_html=True)
-            sex = st.selectbox("", ["Male", "Female"], key=f"sex{key_suffix}")
+        for i in range(num_players):
+            with st.expander(f"Player {i+1}"):
+                name_color = "black"
+                code_color = "black"
+                belt_color = "black"
 
-            st.markdown("<label>Belt Degree</label>", unsafe_allow_html=True)
-            belt_degree = st.selectbox("", belt_options, key=f"belt{key_suffix}")
+                if st.session_state.get(f"name_empty_{i}", False):
+                    name_color = "red"
+                if st.session_state.get(f"code_empty_{i}", False):
+                    code_color = "red"
+                if st.session_state.get(f"belt_empty_{i}", False):
+                    belt_color = "red"
 
-            st.markdown("<label>Player Code</label>", unsafe_allow_html=True)
-            player_code = st.text_input("", key=f"code{key_suffix}")
+                key_suffix = f"_{submit_count}_{i}"
 
-            # -------- African Master Course --------
-            if st.session_state.selected_championship == "African Master Course":
-                course_type = st.selectbox("Select Course Type:", ["Master", "General"])
-                st.markdown("<label>Club</label>", unsafe_allow_html=True)
-                club = st.text_input("", key=f"club{key_suffix}")
+                st.markdown(f"<label style='color:{name_color}'>Athlete Name</label>", unsafe_allow_html=True)
+                athlete_name = st.text_input("", key=f"name{key_suffix}")
+
+                st.markdown("<label>Date of Birth</label>", unsafe_allow_html=True)
+                dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{key_suffix}")
 
                 st.markdown("<label>Nationality</label>", unsafe_allow_html=True)
                 nationality = st.text_input("", key=f"nationality{key_suffix}")
 
-                st.markdown("<label>Coach Name</label>", unsafe_allow_html=True)
-                coach_name = st.text_input("", key=f"coach{key_suffix}")
-
                 st.markdown("<label>Phone Number</label>", unsafe_allow_html=True)
                 phone_number = st.text_input("", key=f"phone{key_suffix}")
 
-                competitions = []  # لا يوجد مسابقات
+                st.markdown("<label>Sex</label>", unsafe_allow_html=True)
+                sex = st.selectbox("", ["Male", "Female"], key=f"sex{key_suffix}")
 
-            else:
-                # -------- البطولات الأخرى كما في الكود القديم --------
-                st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
-                st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
-                st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
-                st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
-                competitions = st.multiselect("Competitions", competitions_list, key=f"comp{key_suffix}")
-                course_type = None
+                st.markdown(f"<label style='color:{code_color}'>Player Code</label>", unsafe_allow_html=True)
+                player_code = st.text_input("", key=f"code{key_suffix}")
 
-            athletes_data.append({
-                "Athlete Name": athlete_name,
-                "Club": club.strip() if st.session_state.selected_championship == "African Master Course" else st.session_state.club.strip(),
-                "Nationality": nationality.strip() if st.session_state.selected_championship == "African Master Course" else st.session_state.nationality.strip(),
-                "Coach Name": coach_name.strip() if st.session_state.selected_championship == "African Master Course" else st.session_state.coach_name.strip(),
-                "Phone Number": phone_number.strip() if st.session_state.selected_championship == "African Master Course" else st.session_state.phone_number.strip(),
-                "Date of Birth": str(dob),
-                "Sex": sex,
-                "Player Code": player_code,
-                "Belt Degree": belt_degree,
-                "Competitions": ", ".join(competitions),
-                "Competitions List": competitions,
-                "index": i,
-                "Championship": st.session_state.selected_championship,
-                "Course Type": course_type
-            })
+                st.markdown(f"<label style='color:{belt_color}'>Belt Degree</label>", unsafe_allow_html=True)
+                belt_degree = st.selectbox("", belt_options, key=f"belt{key_suffix}")
+
+                athletes_data.append({
+                    "Athlete Name": athlete_name,
+                    "Nationality": nationality.strip(),
+                    "Phone Number": phone_number.strip(),
+                    "Date of Birth": str(dob),
+                    "Sex": sex,
+                    "Player Code": player_code,
+                    "Belt Degree": belt_degree,
+                    "Championship": f"African Master Course - {course_type}"
+                })
+
+    # -------- Old Championships FORM --------
+    else:
+        st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
+        st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
+        st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
+        st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
+
+        num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
+
+        competitions_list = [
+            "Individual Kata","Kata Team","Individual Kumite","Fuko Go",
+            "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"
+        ]
+
+        belt_options = [
+            "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
+            "Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3",
+            "Kyu Junior brown 2","Kyu Junior brown 1","Kyu Senior yellow 7","Kyu Senior yellow 6",
+            "Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2",
+            "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
+        ]
+
+        for i in range(num_players):
+            with st.expander(f"Player {i+1}"):
+                name_color = "black"
+                code_color = "black"
+                comp_color = "black"
+                belt_color = "black"
+
+                if st.session_state.get(f"name_empty_{i}", False):
+                    name_color = "red"
+                if st.session_state.get(f"code_empty_{i}", False):
+                    code_color = "red"
+                if st.session_state.get(f"belt_empty_{i}", False):
+                    belt_color = "red"
+                if st.session_state.get(f"comp_empty_{i}", False):
+                    comp_color = "red"
+
+                key_suffix = f"_{submit_count}_{i}"
+
+                st.markdown(f"<label style='color:{name_color}'>Athlete Name</label>", unsafe_allow_html=True)
+                athlete_name = st.text_input("", key=f"name{key_suffix}")
+
+                st.markdown("<label>Date of Birth</label>", unsafe_allow_html=True)
+                dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{key_suffix}")
+
+                st.markdown("<label>Sex</label>", unsafe_allow_html=True)
+                sex = st.selectbox("", ["Male", "Female"], key=f"sex{key_suffix}")
+
+                st.markdown(f"<label style='color:{code_color}'>Player Code</label>", unsafe_allow_html=True)
+                player_code = st.text_input("", key=f"code{key_suffix}")
+
+                st.markdown(f"<label style='color:{belt_color}'>Belt Degree</label>", unsafe_allow_html=True)
+                belt_degree = st.selectbox("", belt_options, key=f"belt{key_suffix}")
+
+                st.markdown(f"<label style='color:{comp_color}'>Competitions</label>", unsafe_allow_html=True)
+                competitions = st.multiselect("", competitions_list, key=f"comp{key_suffix}")
+
+                athletes_data.append({
+                    "Athlete Name": athlete_name,
+                    "Club": st.session_state.club.strip(),
+                    "Nationality": st.session_state.nationality.strip(),
+                    "Coach Name": st.session_state.coach_name.strip(),
+                    "Phone Number": st.session_state.phone_number.strip(),
+                    "Date of Birth": str(dob),
+                    "Sex": sex,
+                    "Player Code": player_code,
+                    "Belt Degree": belt_degree,
+                    "Competitions": ", ".join(competitions),
+                    "Competitions List": competitions,
+                    "index": i,
+                    "Championship": st.session_state.selected_championship
+                })
 
     # -------- Submit Button --------
     if st.button("Submit All"):
@@ -222,7 +267,8 @@ if st.session_state.page == "registration":
             st.session_state[f"name_empty_{i}"] = False
             st.session_state[f"code_empty_{i}"] = False
             st.session_state[f"belt_empty_{i}"] = False
-            st.session_state[f"comp_empty_{i}"] = False
+            if st.session_state.selected_championship != "African Master Course":
+                st.session_state[f"comp_empty_{i}"] = False
 
         codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
         if len(codes_in_form) != len(set(codes_in_form)):
@@ -230,7 +276,7 @@ if st.session_state.page == "registration":
             error_found = True
 
         for athlete in athletes_data:
-            idx = athlete["index"]
+            idx = athlete.get("index", 0)
             if not athlete["Athlete Name"]:
                 st.session_state[f"name_empty_{idx}"] = True
                 error_found = True
@@ -240,7 +286,7 @@ if st.session_state.page == "registration":
             if not athlete["Belt Degree"]:
                 st.session_state[f"belt_empty_{idx}"] = True
                 error_found = True
-            if st.session_state.selected_championship != "African Master Course" and len(athlete["Competitions List"]) == 0:
+            if st.session_state.selected_championship != "African Master Course" and len(athlete.get("Competitions List", [])) == 0:
                 st.session_state[f"comp_empty_{idx}"] = True
                 error_found = True
             if athlete["Player Code"] in df["Player Code"].values:
@@ -256,10 +302,9 @@ if st.session_state.page == "registration":
             save_data(df)
             st.success(f"{count} players registered successfully!")
 
-            # Clear global inputs for non-Master Course
-            if st.session_state.selected_championship != "African Master Course":
-                for key in ["club", "nationality", "coach_name", "phone_number"]:
-                    st.session_state[key] = ""
+            # Clear global inputs
+            for key in ["club", "nationality", "coach_name", "phone_number"]:
+                st.session_state[key] = ""
 
             st.session_state.submit_count += 1
             st.rerun()
@@ -278,7 +323,6 @@ if admin_password == "mobadr90":
         excel_buffer = io.BytesIO()
         df.to_excel(excel_buffer, index=False, engine='openpyxl')
         excel_buffer.seek(0)
-
         championship_name = st.session_state.get("selected_championship", "athletes_data").replace(" ", "_")
         st.download_button(
             label="📥 Download Excel",
