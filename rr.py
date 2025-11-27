@@ -324,65 +324,89 @@ if st.session_state.page == "registration":
                 })
 
 
-# ==========================================================
-# ---------------------- SUBMIT ----------------------
-# ==========================================================
+ # -------- Submit Button --------
+    if st.button("Submit All"):
+        if not st.session_state.club.strip():
+            st.error("⚠️ Please enter a Club name before submitting!")
+        elif not st.session_state.nationality.strip():
+            st.error("⚠️ Please enter Nationality before submitting!")
+        elif not st.session_state.coach_name.strip():
+            st.error("⚠️ Please enter Coach Name before submitting!")
+        elif not st.session_state.phone_number.strip():
+            st.error("⚠️ Please enter Phone Number before submitting!")
+        else:
+            error_found = False
+            df = load_data()
+            count = 0
 
-if st.button("Submit All Players"):
+            # Reset missing field markers
+            for i in range(num_players):
+                st.session_state[f"name_empty_{i}"] = False
+                st.session_state[f"code_empty_{i}"] = False
+                st.session_state[f"belt_empty_{i}"] = False
+                st.session_state[f"comp_empty_{i}"] = False
 
-    error_found = False
-    df = load_data()
-
-    # reset flags
-    for i in range(len(athletes_data)):
-        st.session_state[f"name_empty_{i}"] = False
-        st.session_state[f"code_empty_{i}"] = False
-        st.session_state[f"belt_empty_{i}"] = False
-        if st.session_state.selected_championship != "African Master Course":
-            st.session_state[f"comp_empty_{i}"] = False
-
-    # validate
-    for athlete in athletes_data:
-        idx = athlete.get("index", 0)
-
-        if not athlete["Athlete Name"]:
-            st.session_state[f"name_empty_{idx}"] = True
-            error_found = True
-
-        if not athlete["Player Code"]:
-            st.session_state[f"code_empty_{idx}"] = True
-            error_found = True
-
-        if not athlete["Belt Degree"]:
-            st.session_state[f"belt_empty_{idx}"] = True
-            error_found = True
-
-        if st.session_state.selected_championship != "African Master Course":
-            if len(athlete.get("Competitions List", [])) == 0:
-                st.session_state[f"comp_empty_{idx}"] = True
+            # Check for repeated Player Codes in form
+            codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
+            if len(codes_in_form) != len(set(codes_in_form)):
+                st.error("⚠️ Some Player Codes are repeated in this submission!")
                 error_found = True
 
-    # duplicates
-    pairs_in_form = [
-        (a["Player Code"], a["Championship"])
-        for a in athletes_data if a["Player Code"]
-    ]
+            for athlete in athletes_data:
+                idx = athlete["index"]
+                if not athlete["Athlete Name"]:
+                    st.session_state[f"name_empty_{idx}"] = True
+                    error_found = True
+                if not athlete["Player Code"]:
+                    st.session_state[f"code_empty_{idx}"] = True
+                    error_found = True
+                if not athlete["Belt Degree"]:
+                    st.session_state[f"belt_empty_{idx}"] = True
+                    error_found = True
+                if len(athlete["Competitions List"]) == 0:
+                    st.session_state[f"comp_empty_{idx}"] = True
+                    error_found = True
+                if athlete["Player Code"] in df["Player Code"].values:
+                    st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
+                    error_found = True
 
-    counter_pairs = Counter(pairs_in_form)
-    dup_pairs = [pair for pair, cnt in counter_pairs.items() if cnt > 1]
+            if error_found:
+                st.error("⚠️ Please fix the errors highlighted in red!")
+            else:
+                for athlete in athletes_data:
+                    df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+                    count += 1
+                save_data(df)
+                st.success(f"{count} players registered successfully!")
 
-    if dup_pairs:
-        st.error(f"Duplicate Player Codes detected: {', '.join([f'{c} ({champ})' for c, champ in dup_pairs])}")
-        error_found = True
+                # Clear all global inputs
+                for key in ["club", "nationality", "coach_name", "phone_number"]:
+                    st.session_state[key] = ""
 
-    if error_found:
-        st.warning("Please fill all required fields and remove duplicates.")
+                # زيادة submit_count لتفريغ كل الـ widgets اللاعبين
+                st.session_state.submit_count += 1
+                st.rerun()
+
+# -------- Admin Panel (Sidebar) --------
+st.sidebar.header("Admin Login")
+admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
+
+if admin_password == "mobadr90":
+    st.sidebar.success("Logged in as Admin ✅")
+    df = load_data()
+    if df.empty:
+        st.info("No data found yet.")
     else:
-        for athlete in athletes_data:
-            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+        st.dataframe(df, use_container_width=True)
+        excel_buffer = io.BytesIO()
+        df.to_excel(excel_buffer, index=False, engine='openpyxl')
+        excel_buffer.seek(0)
 
-        save_data(df)
+        championship_name = st.session_state.get("selected_championship", "athletes_data").replace(" ", "_")
 
-        st.success(f"✅ {len(athletes_data)} players submitted successfully!")
-        st.session_state.submit_count += 1
-        safe_rerun()
+        st.download_button(
+            label="📥 Download Excel",
+            data=excel_buffer,
+            file_name=f"{championship_name}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
