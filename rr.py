@@ -49,7 +49,7 @@ def load_data():
     required_cols = [
         "Championship",
         "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
-        "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
+        "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions", "Course Type"
     ]
     if DATA_FILE.exists():
         df = pd.read_csv(DATA_FILE)
@@ -117,18 +117,8 @@ if st.session_state.page == "registration":
         unsafe_allow_html=True
     )
 
-    # -------- Club, Nationality, Coach, Phone Inputs --------
-    st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
-    st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
-    st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
-    st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
-
-    # -------- اختيار نوع الدورة لو African Master Course --------
-    course_type = None
-    if st.session_state.selected_championship == "African Master Course":
-        course_type = st.selectbox("Select Course Type:", ["Master", "General"])
-
     num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
+
     competitions_list = [
         "Individual Kata","Kata Team","Individual Kumite","Fuko Go",
         "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"
@@ -141,6 +131,11 @@ if st.session_state.page == "registration":
         "Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2",
         "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
     ]
+
+    # -------- اختيار نوع الدورة لو African Master Course --------
+    course_type = None
+    if st.session_state.selected_championship == "African Master Course":
+        course_type = st.selectbox("Select Course Type:", ["Master", "General"])
 
     athletes_data = []
     submit_count = st.session_state.submit_count
@@ -170,12 +165,6 @@ if st.session_state.page == "registration":
             st.markdown("<label>Date of Birth</label>", unsafe_allow_html=True)
             dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{key_suffix}")
 
-            st.markdown("<label>Nationality</label>", unsafe_allow_html=True)
-            nationality = st.text_input("", key=f"nationality{key_suffix}", value=st.session_state.nationality)
-
-            st.markdown("<label>Phone Number</label>", unsafe_allow_html=True)
-            phone_number = st.text_input("", key=f"phone{key_suffix}", value=st.session_state.phone_number)
-
             st.markdown("<label>Sex</label>", unsafe_allow_html=True)
             sex = st.selectbox("", ["Male", "Female"], key=f"sex{key_suffix}")
 
@@ -185,24 +174,39 @@ if st.session_state.page == "registration":
             st.markdown("<label>Player Code</label>", unsafe_allow_html=True)
             player_code = st.text_input("", key=f"code{key_suffix}")
 
-            # Competitions لو مش African Master Course أو حسب نوع Master/General
-            if st.session_state.selected_championship != "African Master Course":
-                st.markdown(f"<label style='color:{comp_color}'>Competitions</label>", unsafe_allow_html=True)
-                competitions = st.multiselect("", competitions_list, key=f"comp{key_suffix}")
-            else:
+            # -------- بيانات خاصة لكل لاعب في African Master Course --------
+            if st.session_state.selected_championship == "African Master Course":
+                st.markdown("<label>Club</label>", unsafe_allow_html=True)
+                club = st.text_input("", key=f"club{key_suffix}")
+
+                st.markdown("<label>Nationality</label>", unsafe_allow_html=True)
+                nationality = st.text_input("", key=f"nationality{key_suffix}")
+
+                st.markdown("<label>Coach Name</label>", unsafe_allow_html=True)
+                coach_name = st.text_input("", key=f"coach{key_suffix}")
+
+                st.markdown("<label>Phone Number</label>", unsafe_allow_html=True)
+                phone_number = st.text_input("", key=f"phone{key_suffix}")
+
+                # Competitions حسب نوع الدورة
                 if course_type == "Master":
                     competitions = st.multiselect("Competitions", ["Individual Kata", "Kumite"])
-                elif course_type == "General":
-                    competitions = st.multiselect("Competitions", ["Kata Team", "Fuko Go"])
                 else:
-                    competitions = []
+                    competitions = st.multiselect("Competitions", ["Kata Team", "Fuko Go"])
+            else:
+                # باقي البطولات: نفس الكود القديم
+                st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
+                st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
+                st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
+                st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
+                competitions = st.multiselect("", competitions_list, key=f"comp{key_suffix}")
 
             athletes_data.append({
                 "Athlete Name": athlete_name,
-                "Club": st.session_state.club.strip(),
-                "Nationality": nationality.strip(),
-                "Coach Name": st.session_state.coach_name.strip(),
-                "Phone Number": phone_number.strip(),
+                "Club": club.strip() if st.session_state.selected_championship == "African Master Course" else st.session_state.club.strip(),
+                "Nationality": nationality.strip() if st.session_state.selected_championship == "African Master Course" else st.session_state.nationality.strip(),
+                "Coach Name": coach_name.strip() if st.session_state.selected_championship == "African Master Course" else st.session_state.coach_name.strip(),
+                "Phone Number": phone_number.strip() if st.session_state.selected_championship == "African Master Course" else st.session_state.phone_number.strip(),
                 "Date of Birth": str(dob),
                 "Sex": sex,
                 "Player Code": player_code,
@@ -216,66 +220,56 @@ if st.session_state.page == "registration":
 
     # -------- Submit Button --------
     if st.button("Submit All"):
-        if not st.session_state.club.strip():
-            st.error("⚠️ Please enter a Club name before submitting!")
-        elif not st.session_state.nationality.strip():
-            st.error("⚠️ Please enter Nationality before submitting!")
-        elif not st.session_state.coach_name.strip():
-            st.error("⚠️ Please enter Coach Name before submitting!")
-        elif not st.session_state.phone_number.strip():
-            st.error("⚠️ Please enter Phone Number before submitting!")
-        else:
-            error_found = False
-            df = load_data()
-            count = 0
+        error_found = False
+        df = load_data()
+        count = 0
 
-            # Reset missing field markers
-            for i in range(num_players):
-                st.session_state[f"name_empty_{i}"] = False
-                st.session_state[f"code_empty_{i}"] = False
-                st.session_state[f"belt_empty_{i}"] = False
-                st.session_state[f"comp_empty_{i}"] = False
+        for i in range(num_players):
+            st.session_state[f"name_empty_{i}"] = False
+            st.session_state[f"code_empty_{i}"] = False
+            st.session_state[f"belt_empty_{i}"] = False
+            st.session_state[f"comp_empty_{i}"] = False
 
-            # Check for repeated Player Codes in form
-            codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
-            if len(codes_in_form) != len(set(codes_in_form)):
-                st.error("⚠️ Some Player Codes are repeated in this submission!")
+        # Check for repeated Player Codes
+        codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
+        if len(codes_in_form) != len(set(codes_in_form)):
+            st.error("⚠️ Some Player Codes are repeated in this submission!")
+            error_found = True
+
+        for athlete in athletes_data:
+            idx = athlete["index"]
+            if not athlete["Athlete Name"]:
+                st.session_state[f"name_empty_{idx}"] = True
+                error_found = True
+            if not athlete["Player Code"]:
+                st.session_state[f"code_empty_{idx}"] = True
+                error_found = True
+            if not athlete["Belt Degree"]:
+                st.session_state[f"belt_empty_{idx}"] = True
+                error_found = True
+            if len(athlete["Competitions List"]) == 0:
+                st.session_state[f"comp_empty_{idx}"] = True
+                error_found = True
+            if athlete["Player Code"] in df["Player Code"].values:
+                st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
                 error_found = True
 
+        if error_found:
+            st.error("⚠️ Please fix the errors highlighted in red!")
+        else:
             for athlete in athletes_data:
-                idx = athlete["index"]
-                if not athlete["Athlete Name"]:
-                    st.session_state[f"name_empty_{idx}"] = True
-                    error_found = True
-                if not athlete["Player Code"]:
-                    st.session_state[f"code_empty_{idx}"] = True
-                    error_found = True
-                if not athlete["Belt Degree"]:
-                    st.session_state[f"belt_empty_{idx}"] = True
-                    error_found = True
-                if len(athlete["Competitions List"]) == 0 and athlete["Championship"] != "African Master Course":
-                    st.session_state[f"comp_empty_{idx}"] = True
-                    error_found = True
-                if athlete["Player Code"] in df["Player Code"].values:
-                    st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
-                    error_found = True
+                df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+                count += 1
+            save_data(df)
+            st.success(f"{count} players registered successfully!")
 
-            if error_found:
-                st.error("⚠️ Please fix the errors highlighted in red!")
-            else:
-                for athlete in athletes_data:
-                    df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
-                    count += 1
-                save_data(df)
-                st.success(f"{count} players registered successfully!")
-
-                # Clear all global inputs
+            # Clear global inputs for other championships
+            if st.session_state.selected_championship != "African Master Course":
                 for key in ["club", "nationality", "coach_name", "phone_number"]:
                     st.session_state[key] = ""
 
-                # زيادة submit_count لتفريغ كل الـ widgets اللاعبين
-                st.session_state.submit_count += 1
-                st.rerun()
+            st.session_state.submit_count += 1
+            st.rerun()
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
@@ -293,7 +287,6 @@ if admin_password == "mobadr90":
         excel_buffer.seek(0)
 
         championship_name = st.session_state.get("selected_championship", "athletes_data").replace(" ", "_")
-
         st.download_button(
             label="📥 Download Excel",
             data=excel_buffer,
