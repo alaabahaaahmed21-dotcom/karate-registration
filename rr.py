@@ -240,7 +240,7 @@ if st.session_state.page == "registration":
                     "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
                 ], key=f"belt{key_suffix}")
 
-                # Federation
+                  # Federation
                 if st.session_state.selected_championship == "North Africa Traditional Karate Championship":
 
                     federation = st.selectbox(
@@ -270,6 +270,24 @@ if st.session_state.page == "registration":
                 competitions = st.multiselect("Competitions", comp_list, key=f"comp{key_suffix}")
 
                 pic = st.file_uploader("Profile Picture", type=["png","jpg","jpeg"], key=f"pic{key_suffix}")
+
+                athletes_data.append({
+                    "Athlete Name": athlete_name.strip(),
+                    "Club": st.session_state.club.strip(),
+                    "Nationality": st.session_state.nationality.strip(),
+                    "Coach Name": st.session_state.coach_name.strip(),
+                    "Phone Number": st.session_state.phone_number.strip(),
+                    "Date of Birth": str(dob),
+                    "Sex": sex,
+                    "Player Code": code.strip(),
+                    "Belt Degree": belt,
+                    "Competitions": ", ".join(competitions),
+                    "Competitions List": competitions,
+                    "Federation": federation,
+                    "Profile Picture": pic.name if pic else "",
+                    "index": i,
+                    "Championship": st.session_state.selected_championship
+                })
 
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
