@@ -1,4 +1,3 @@
-########## اخر تعديل للبطولة يا لولا
 import streamlit as st
 import pandas as pd
 from datetime import date
@@ -197,7 +196,7 @@ if st.session_state.page == "registration":
                     "Player Code": code.strip(),
                     "Belt Degree": belt,
                     "Competitions": "",
-                    "Competitions List": [],   # FIXED
+                    "Competitions List": [],
                     "Federation": "",
                     "Profile Picture": pic.name if pic else "",
                     "index": i,
@@ -240,8 +239,16 @@ if st.session_state.page == "registration":
                     "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
                 ], key=f"belt{key_suffix}")
 
-                  # Federation
-                if st.session_state.selected_championship == "North Africa Traditional Karate Championship":
+                # ------------------------------------------------------------
+                # Federation — ONLY for 2 championships
+                # ------------------------------------------------------------
+
+                federation_champs = [
+                    "African Open Traditional Karate Championship",
+                    "North Africa Unitied Karate Championship (General)"
+                ]
+
+                if st.session_state.selected_championship in federation_champs:
 
                     federation = st.selectbox(
                         "Select Federation",
@@ -251,13 +258,13 @@ if st.session_state.page == "registration":
 
                     if federation == "Egyptian Traditional Karate Federation":
                         comp_list = [
-                            "Individual kata","Kata team","Individual kumite","Fuko go",
-                            "Inbo mix","Inbo male","Inbo female","Kumite team"
+                            "Individual Kata","Kata Team","Individual Kumite","Fuko Go",
+                            "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"
                         ]
                     else:
                         comp_list = [
-                            "Individual kata","Kata team","Kumite Ibon","Kumite Nihon",
-                            "Kumite Sanbon","Kumite Rote shine"
+                            "Individual Kata","Kata Team","Kumite Ibon","Kumite Nihon",
+                            "Kumite Sanbon","Kumite Rote Shine"
                         ]
 
                 else:
@@ -289,26 +296,8 @@ if st.session_state.page == "registration":
                     "Championship": st.session_state.selected_championship
                 })
 
-                athletes_data.append({
-                    "Athlete Name": athlete_name.strip(),
-                    "Club": st.session_state.club.strip(),
-                    "Nationality": st.session_state.nationality.strip(),
-                    "Coach Name": st.session_state.coach_name.strip(),
-                    "Phone Number": st.session_state.phone_number.strip(),
-                    "Date of Birth": str(dob),
-                    "Sex": sex,
-                    "Player Code": code.strip(),
-                    "Belt Degree": belt,
-                    "Competitions": ", ".join(competitions),
-                    "Competitions List": competitions,
-                    "Federation": federation,
-                    "Profile Picture": pic.name if pic else "",
-                    "index": i,
-                    "Championship": st.session_state.selected_championship
-                })
-
 # ------------------------------------------------------------
-# SUBMIT BUTTON  — FIXED INDENTATION
+# SUBMIT BUTTON
 # ------------------------------------------------------------
 
 if st.session_state.page == "registration":
@@ -318,7 +307,6 @@ if st.session_state.page == "registration":
         df = load_data()
         error = False
 
-        # Verify all players
         for athlete in athletes_data:
 
             idx = athlete["index"]
@@ -332,12 +320,10 @@ if st.session_state.page == "registration":
             if not athlete["Belt Degree"]:
                 error = True
 
-            # Only check competitions for normal championships
             if st.session_state.selected_championship != "African Master Course":
                 if len(athlete["Competitions List"]) == 0:
                     error = True
 
-            # Duplicate Code check
             if athlete["Player Code"] in df["Player Code"].astype(str).values:
                 st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
                 error = True
@@ -346,14 +332,12 @@ if st.session_state.page == "registration":
             st.error("⚠️ Please fix the highlighted errors before submitting.")
             st.stop()
 
-        # Save Data
         for athlete in athletes_data:
             df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
         save_data(df)
         st.success(f"{len(athletes_data)} players registered successfully!")
 
-        # Reset inputs
         for key in ["club", "nationality", "coach_name", "phone_number"]:
             st.session_state[key] = ""
 
