@@ -4,6 +4,26 @@ from datetime import date
 import io
 from pathlib import Path
 
+# -------- Safe Rerun Function --------
+def safe_rerun():
+    try:
+        if hasattr(st, "rerun"):
+            try:
+                st.rerun()
+                return
+            except Exception:
+                pass
+        if hasattr(st, "experimental_rerun"):
+            try:
+                st.experimental_rerun()
+                return
+            except Exception:
+                pass
+        st.error("❌ Streamlit version does not support rerun. Please upgrade Streamlit.")
+    except Exception as fatal:
+        st.error("Unexpected error during rerun:")
+        st.exception(fatal)
+
 # ---- روابط الصور من GitHub RAW ----
 img1 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo1.png"
 img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo2.png"
@@ -56,7 +76,6 @@ def load_data():
         for col in required_cols:
             if col not in df.columns:
                 df[col] = ""
-        # return columns in canonical order
         return df[required_cols]
     else:
         return pd.DataFrame(columns=required_cols)
@@ -95,7 +114,7 @@ if st.session_state.page == "select_championship":
     if st.button("Next ➜"):
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
-        st.experimental_rerun()
+        safe_rerun()
     st.stop()
 
 # -------- Registration Page --------
@@ -103,7 +122,7 @@ if st.session_state.page == "registration":
 
     if st.button("⬅ Back to Championship Selection"):
         st.session_state.page = "select_championship"
-        st.experimental_rerun()
+        safe_rerun()
 
     st.markdown(f"""
     <div class="image-row">
@@ -173,7 +192,6 @@ if st.session_state.page == "registration":
                 st.markdown(f"<label style='color:{belt_color}'>Belt Degree</label>", unsafe_allow_html=True)
                 belt_degree = st.selectbox("", belt_options, key=f"belt{key_suffix}")
 
-                # add index so validation highlights correctly
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
                     "Club": "",
@@ -302,7 +320,7 @@ if st.session_state.page == "registration":
             st.error(f"⚠️ Some Player Codes are repeated in this submission: {', '.join(dupes)}")
             error_found = True
 
-        # check duplicates against saved file (only if the code is non-empty)
+        # check duplicates against saved file
         existing_codes = set(df["Player Code"].astype(str).tolist()) if not df.empty else set()
         conflicts = [code for code in codes_in_form if code in existing_codes]
         if conflicts:
@@ -313,7 +331,6 @@ if st.session_state.page == "registration":
             st.error("⚠️ Please fix the errors highlighted in red!")
         else:
             for athlete in athletes_data:
-                # remove helper keys before saving (like Competitions List, index)
                 row = athlete.copy()
                 row.pop("Competitions List", None)
                 row.pop("index", None)
@@ -322,12 +339,11 @@ if st.session_state.page == "registration":
             save_data(df)
             st.success(f"{count} players registered successfully!")
 
-            # Clear global inputs
             for key in ["club", "nationality", "coach_name", "phone_number"]:
                 st.session_state[key] = ""
 
             st.session_state.submit_count += 1
-            st.experimental_rerun()
+            safe_rerun()
 
 # -------- Admin Panel (Sidebar) --------
 st.sidebar.header("Admin Login")
