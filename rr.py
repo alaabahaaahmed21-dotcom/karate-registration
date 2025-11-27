@@ -3,8 +3,6 @@ import pandas as pd
 from datetime import date
 import io
 from pathlib import Path
-from collections import Counter
-
 
 # ---------------------- Safe Rerun ----------------------
 def safe_rerun():
@@ -29,13 +27,11 @@ def safe_rerun():
         st.error("Unexpected error during rerun:")
         st.exception(fatal)
 
-
-# ---------------------- Images ----------------------
+# ---------------------- Logos ----------------------
 img1 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo1.png"
 img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo2.png"
 img3 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo3.png"
 img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo4.png"
-
 
 # ---------------------- CSS ----------------------
 st.markdown("""
@@ -50,22 +46,8 @@ st.markdown("""
     width: 90px;
     height: auto;
 }
-body {
-    background-color: white;
-    color: black;
-}
-.stTextInput>div>div>input, 
-.stNumberInput>div>div>input,
-.stSelectbox>div>div>div>select,
-.stMultiselect>div>div>div>div>div,
-.stDateInput>div>div>input,
-.stFileUploader>div>div>input {
-    background-color: #f0f0f0;
-    color: black;
-}
 </style>
 """, unsafe_allow_html=True)
-
 
 # ---------------------- Page State ----------------------
 if "page" not in st.session_state:
@@ -73,39 +55,34 @@ if "page" not in st.session_state:
 
 DATA_FILE = Path("athletes_data.csv")
 
-
 # ---------------------- Load + Save ----------------------
 def load_data():
-    required_cols = [
-        "Championship",
-        "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
-        "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions", "Federation",
-        "Profile Picture"
+    cols = [
+        "Championship", "Athlete Name", "Club", "Nationality", "Coach Name",
+        "Phone Number", "Date of Birth", "Sex", "Player Code",
+        "Belt Degree", "Competitions", "Federation", "Profile Picture"
     ]
 
     if DATA_FILE.exists():
         df = pd.read_csv(DATA_FILE)
-        for col in required_cols:
-            if col not in df.columns:
-                df[col] = ""
-        return df[required_cols]
+        for c in cols:
+            if c not in df.columns:
+                df[c] = ""
+        return df[cols]
 
-    return pd.DataFrame(columns=required_cols)
-
+    return pd.DataFrame(columns=cols)
 
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
-
-# ---------------------- Default session keys ----------------------
+# ---------------------- Defaults ----------------------
 for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
     if key not in st.session_state:
         st.session_state[key] = "" if key != "submit_count" else 0
 
-
-# ==========================================================
-# ---------------------- PAGE 1: Select Championship ----------------------
-# ==========================================================
+# =====================================================
+# PAGE 1 — Select Championship
+# =====================================================
 
 if st.session_state.page == "select_championship":
 
@@ -136,10 +113,9 @@ if st.session_state.page == "select_championship":
 
     st.stop()
 
-
-# ==========================================================
-# ---------------------- PAGE 2: Registration ----------------------
-# ==========================================================
+# =====================================================
+# PAGE 2 — Registration
+# =====================================================
 
 if st.session_state.page == "registration":
 
@@ -150,16 +126,16 @@ if st.session_state.page == "registration":
 
     # Logos
     st.markdown(f"""
-        <div class="image-row">
-            <img src="{img1}">
-            <img src="{img2}">
-            <img src="{img3}">
-            <img src="{img4}">
-        </div>
+    <div class="image-row">
+        <img src="{img1}">
+        <img src="{img2}">
+        <img src="{img3}">
+        <img src="{img4}">
+    </div>
     """, unsafe_allow_html=True)
 
     st.markdown(
-        f"<h3 style='text-align: left; color: black;'>🏆 Registration Form: {st.session_state.selected_championship}</h3>",
+        f"<h3 style='color:black'>🏆 Registration Form: {st.session_state.selected_championship}</h3>",
         unsafe_allow_html=True
     )
 
@@ -167,7 +143,7 @@ if st.session_state.page == "registration":
     submit_count = st.session_state.submit_count
 
     # ------------------------------------------------------------
-    # ---------------------- African Master Course ----------------------
+    # African Course
     # ------------------------------------------------------------
 
     if st.session_state.selected_championship == "African Master Course":
@@ -176,7 +152,7 @@ if st.session_state.page == "registration":
 
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
 
-        num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
+        num_players = st.number_input("Number of players to add:", min_value=1, value=1)
 
         belt_options = [
             "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
@@ -192,49 +168,43 @@ if st.session_state.page == "registration":
 
             with st.expander(f"Player {i+1}"):
 
-                st.markdown("<label>Athlete Name</label>", unsafe_allow_html=True)
-                athlete_name = st.text_input("", key=f"name{key_suffix}")
+                athlete_name = st.text_input("Athlete Name", key=f"name{key_suffix}")
 
-                st.markdown("<label>Date of Birth</label>", unsafe_allow_html=True)
-                dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{key_suffix}")
+                dob = st.date_input("Date of Birth", min_value=date(1960,1,1),
+                                    max_value=date.today(), key=f"dob{key_suffix}")
 
-                st.markdown("<label>Nationality</label>", unsafe_allow_html=True)
-                nationality = st.text_input("", key=f"nationality{key_suffix}")
+                nationality = st.text_input("Nationality", key=f"nat{key_suffix}")
 
-                st.markdown("<label>Phone Number</label>", unsafe_allow_html=True)
-                phone_number = st.text_input("", key=f"phone{key_suffix}")
+                phone = st.text_input("Phone Number", key=f"phone{key_suffix}")
 
-                st.markdown("<label>Sex</label>", unsafe_allow_html=True)
-                sex = st.selectbox("", ["Male", "Female"], key=f"sex{key_suffix}")
+                sex = st.selectbox("Sex", ["Male", "Female"], key=f"sex{key_suffix}")
 
-                st.markdown("<label>Player Code</label>", unsafe_allow_html=True)
-                player_code = st.text_input("", key=f"code{key_suffix}")
+                code = st.text_input("Player Code", key=f"code{key_suffix}")
 
-                st.markdown("<label>Belt Degree</label>", unsafe_allow_html=True)
-                belt_degree = st.selectbox("", belt_options, key=f"belt{key_suffix}")
+                belt = st.selectbox("Belt Degree", belt_options, key=f"belt{key_suffix}")
 
-                st.markdown("<label>Put your profile picture</label>", unsafe_allow_html=True)
-                profile_pic = st.file_uploader("", type=["png","jpg","jpeg"], key=f"profile{key_suffix}")
+                pic = st.file_uploader("Profile Picture", type=["png","jpg","jpeg"], key=f"pic{key_suffix}")
 
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
                     "Club": st.session_state.club.strip(),
                     "Nationality": nationality.strip(),
                     "Coach Name": "",
-                    "Phone Number": phone_number.strip(),
+                    "Phone Number": phone.strip(),
                     "Date of Birth": str(dob),
                     "Sex": sex,
-                    "Player Code": player_code.strip(),
-                    "Belt Degree": belt_degree,
+                    "Player Code": code.strip(),
+                    "Belt Degree": belt,
                     "Competitions": "",
+                    "Competitions List": [],   # FIXED
                     "Federation": "",
-                    "Profile Picture": profile_pic.name if profile_pic else "",
+                    "Profile Picture": pic.name if pic else "",
                     "index": i,
                     "Championship": f"African Master Course - {course_type}"
                 })
 
     # ------------------------------------------------------------
-    # ---------------------- Other Championships ----------------------
+    # Other Championships
     # ------------------------------------------------------------
 
     else:
@@ -244,7 +214,7 @@ if st.session_state.page == "registration":
         st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
         st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
 
-        num_players = st.number_input("Number of players to add:", min_value=1, value=1, step=1)
+        num_players = st.number_input("Number of players to add:", min_value=1, value=1)
 
         for i in range(num_players):
 
@@ -252,20 +222,16 @@ if st.session_state.page == "registration":
 
             with st.expander(f"Player {i+1}"):
 
-                st.markdown("<label>Athlete Name</label>", unsafe_allow_html=True)
-                athlete_name = st.text_input("", key=f"name{key_suffix}")
+                athlete_name = st.text_input("Athlete Name", key=f"name{key_suffix}")
 
-                st.markdown("<label>Date of Birth</label>", unsafe_allow_html=True)
-                dob = st.date_input("", min_value=date(1960,1,1), max_value=date.today(), key=f"dob{key_suffix}")
+                dob = st.date_input("Date of Birth", min_value=date(1960,1,1),
+                                    max_value=date.today(), key=f"dob{key_suffix}")
 
-                st.markdown("<label>Sex</label>", unsafe_allow_html=True)
-                sex = st.selectbox("", ["Male", "Female"], key=f"sex{key_suffix}")
+                sex = st.selectbox("Sex", ["Male", "Female"], key=f"sex{key_suffix}")
 
-                st.markdown("<label>Player Code</label>", unsafe_allow_html=True)
-                player_code = st.text_input("", key=f"code{key_suffix}")
+                code = st.text_input("Player Code", key=f"code{key_suffix}")
 
-                st.markdown("<label>Belt Degree</label>", unsafe_allow_html=True)
-                belt_degree = st.selectbox("", [
+                belt = st.selectbox("Belt Degree", [
                     "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
                     "Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3",
                     "Kyu Junior brown 2","Kyu Junior brown 1","Kyu Senior yellow 7","Kyu Senior yellow 6",
@@ -273,37 +239,36 @@ if st.session_state.page == "registration":
                     "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
                 ], key=f"belt{key_suffix}")
 
-                # Federation choice (only for North Africa)
+                # Federation
                 if st.session_state.selected_championship == "North Africa Traditional Karate Championship":
 
                     federation = st.selectbox(
                         "Select Federation",
                         ["Egyptian Traditional Karate Federation", "Unified General Federation"],
-                        key=f"federation{key_suffix}"
+                        key=f"fed{key_suffix}"
                     )
 
                     if federation == "Egyptian Traditional Karate Federation":
-                        competitions_list = [
+                        comp_list = [
                             "Individual kata","Kata team","Individual kumite","Fuko go",
                             "Inbo mix","Inbo male","Inbo female","Kumite team"
                         ]
                     else:
-                        competitions_list = [
+                        comp_list = [
                             "Individual kata","Kata team","Kumite Ibon","Kumite Nihon",
                             "Kumite Sanbon","Kumite Rote shine"
                         ]
+
                 else:
                     federation = ""
-                    competitions_list = [
+                    comp_list = [
                         "Individual Kata","Kata Team","Individual Kumite","Fuko Go",
                         "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"
                     ]
 
-                st.markdown("<label>Competitions</label>", unsafe_allow_html=True)
-                competitions = st.multiselect("", competitions_list, key=f"comp{key_suffix}")
+                competitions = st.multiselect("Competitions", comp_list, key=f"comp{key_suffix}")
 
-                st.markdown("<label>Put your profile picture</label>", unsafe_allow_html=True)
-                profile_pic = st.file_uploader("", type=["png","jpg","jpeg"], key=f"profile{key_suffix}")
+                pic = st.file_uploader("Profile Picture", type=["png","jpg","jpeg"], key=f"pic{key_suffix}")
 
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
@@ -313,100 +278,93 @@ if st.session_state.page == "registration":
                     "Phone Number": st.session_state.phone_number.strip(),
                     "Date of Birth": str(dob),
                     "Sex": sex,
-                    "Player Code": player_code.strip(),
-                    "Belt Degree": belt_degree,
+                    "Player Code": code.strip(),
+                    "Belt Degree": belt,
                     "Competitions": ", ".join(competitions),
                     "Competitions List": competitions,
                     "Federation": federation,
-                    "Profile Picture": profile_pic.name if profile_pic else "",
+                    "Profile Picture": pic.name if pic else "",
                     "index": i,
                     "Championship": st.session_state.selected_championship
                 })
 
+# ------------------------------------------------------------
+# SUBMIT BUTTON  — FIXED INDENTATION
+# ------------------------------------------------------------
 
- # -------- Submit Button --------
+if st.session_state.page == "registration":
+
     if st.button("Submit All"):
-        if not st.session_state.club.strip():
-            st.error("⚠️ Please enter a Club name before submitting!")
-        elif not st.session_state.nationality.strip():
-            st.error("⚠️ Please enter Nationality before submitting!")
-        elif not st.session_state.coach_name.strip():
-            st.error("⚠️ Please enter Coach Name before submitting!")
-        elif not st.session_state.phone_number.strip():
-            st.error("⚠️ Please enter Phone Number before submitting!")
-        else:
-            error_found = False
-            df = load_data()
-            count = 0
 
-            # Reset missing field markers
-            for i in range(num_players):
-                st.session_state[f"name_empty_{i}"] = False
-                st.session_state[f"code_empty_{i}"] = False
-                st.session_state[f"belt_empty_{i}"] = False
-                st.session_state[f"comp_empty_{i}"] = False
+        df = load_data()
+        error = False
 
-            # Check for repeated Player Codes in form
-            codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
-            if len(codes_in_form) != len(set(codes_in_form)):
-                st.error("⚠️ Some Player Codes are repeated in this submission!")
-                error_found = True
+        # Verify all players
+        for athlete in athletes_data:
 
-            for athlete in athletes_data:
-                idx = athlete["index"]
-                if not athlete["Athlete Name"]:
-                    st.session_state[f"name_empty_{idx}"] = True
-                    error_found = True
-                if not athlete["Player Code"]:
-                    st.session_state[f"code_empty_{idx}"] = True
-                    error_found = True
-                if not athlete["Belt Degree"]:
-                    st.session_state[f"belt_empty_{idx}"] = True
-                    error_found = True
+            idx = athlete["index"]
+
+            if not athlete["Athlete Name"]:
+                error = True
+
+            if not athlete["Player Code"]:
+                error = True
+
+            if not athlete["Belt Degree"]:
+                error = True
+
+            # Only check competitions for normal championships
+            if st.session_state.selected_championship != "African Master Course":
                 if len(athlete["Competitions List"]) == 0:
-                    st.session_state[f"comp_empty_{idx}"] = True
-                    error_found = True
-                if athlete["Player Code"] in df["Player Code"].values:
-                    st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
-                    error_found = True
+                    error = True
 
-            if error_found:
-                st.error("⚠️ Please fix the errors highlighted in red!")
-            else:
-                for athlete in athletes_data:
-                    df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
-                    count += 1
-                save_data(df)
-                st.success(f"{count} players registered successfully!")
+            # Duplicate Code check
+            if athlete["Player Code"] in df["Player Code"].astype(str).values:
+                st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
+                error = True
 
-                # Clear all global inputs
-                for key in ["club", "nationality", "coach_name", "phone_number"]:
-                    st.session_state[key] = ""
+        if error:
+            st.error("⚠️ Please fix the highlighted errors before submitting.")
+            st.stop()
 
-                # زيادة submit_count لتفريغ كل الـ widgets اللاعبين
-                st.session_state.submit_count += 1
-                st.rerun()
+        # Save Data
+        for athlete in athletes_data:
+            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
-# -------- Admin Panel (Sidebar) --------
+        save_data(df)
+        st.success(f"{len(athletes_data)} players registered successfully!")
+
+        # Reset inputs
+        for key in ["club", "nationality", "coach_name", "phone_number"]:
+            st.session_state[key] = ""
+
+        st.session_state.submit_count += 1
+        st.rerun()
+
+# ---------------------- ADMIN PANEL ----------------------
 st.sidebar.header("Admin Login")
 admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 
 if admin_password == "mobadr90":
+
     st.sidebar.success("Logged in as Admin ✅")
+
     df = load_data()
+
     if df.empty:
-        st.info("No data found yet.")
+        st.info("No data yet.")
     else:
         st.dataframe(df, use_container_width=True)
-        excel_buffer = io.BytesIO()
-        df.to_excel(excel_buffer, index=False, engine='openpyxl')
-        excel_buffer.seek(0)
 
-        championship_name = st.session_state.get("selected_championship", "athletes_data").replace(" ", "_")
+        buffer = io.BytesIO()
+        df.to_excel(buffer, index=False, engine="openpyxl")
+        buffer.seek(0)
+
+        name = st.session_state.get("selected_championship", "athletes").replace(" ", "_")
 
         st.download_button(
-            label="📥 Download Excel",
-            data=excel_buffer,
-            file_name=f"{championship_name}.xlsx",
+            "📥 Download Excel",
+            buffer,
+            file_name=f"{name}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
