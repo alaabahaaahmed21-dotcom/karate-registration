@@ -167,7 +167,7 @@ if st.session_state.page == "registration":
                 phone = st.text_input("Phone Number", key=f"phone{key_suffix}")
                 sex = st.selectbox("Sex", ["Male", "Female"], key=f"sex{key_suffix}")
                 code = st.text_input("Player Code", key=f"code{key_suffix}")
-                belt = st.selectbox("Belt Degree", belt_options, key=f"belt{key_suffix}")
+                belt = st.selectbox("Belt Degree", belt_options, key=f"belt{key_suffix})
                 pic = st.file_uploader("Profile Picture", type=["png","jpg","jpeg"], key=f"pic{key_suffix}")
 
                 athletes_data.append({
@@ -220,7 +220,6 @@ if st.session_state.page == "registration":
                     "African Open Traditional Karate Championship",
                     "North Africa Unitied Karate Championship (General)"
                 ]
-
                 if st.session_state.selected_championship in federation_champs:
                     federation = st.selectbox(
                         "Select Federation",
@@ -277,35 +276,41 @@ if st.session_state.page == "registration":
         errors_list = []
         seen_codes = set(df["Player Code"].astype(str).values)
 
-        for athlete in athletes_data:
-            idx = athlete["index"]
-            name = athlete.get("Athlete Name","").strip()
-            code = str(athlete.get("Player Code","")).strip()
-            belt = athlete.get("Belt Degree","")
-            comps = athlete.get("Competitions List", [])
-
-            if not name:
-                errors_list.append(f"Player #{idx+1}: Athlete Name is missing.")
-                error = True
-            if not code:
-                errors_list.append(f"Player #{idx+1}: Player Code is missing.")
-                error = True
-            if not belt:
-                errors_list.append(f"Player #{idx+1}: Belt Degree is missing.")
-                error = True
-
-            if st.session_state.selected_championship != "African Master Course":
-                if len(comps)==0:
-                    errors_list.append(f"Player #{idx+1} ({name or 'no name'}): Please select at least one competition.")
+        for idx, athlete in enumerate(athletes_data):
+            # Required fields
+            required_fields = [
+                ("Athlete Name", athlete.get("Athlete Name","").strip()),
+                ("Player Code", athlete.get("Player Code","").strip()),
+                ("Belt Degree", athlete.get("Belt Degree","")),
+                ("Club", athlete.get("Club","").strip()),
+                ("Nationality", athlete.get("Nationality","").strip()),
+                ("Coach Name", athlete.get("Coach Name","").strip()),
+                ("Phone Number", athlete.get("Phone Number","").strip()),
+                ("Date of Birth", athlete.get("Date of Birth","").strip()),
+                ("Sex", athlete.get("Sex","").strip())
+            ]
+            # For federations + competitions
+            if st.session_state.selected_championship in ["African Open Traditional Karate Championship",
+                                                           "North Africa Unitied Karate Championship (General)"]:
+                required_fields.append(("Federation", athlete.get("Federation","").strip()))
+                if len(athlete.get("Competitions List",[]))==0:
+                    errors_list.append(f"Player #{idx+1}: Please select at least one competition.")
                     error = True
 
+            for field_name, value in required_fields:
+                if not value:
+                    errors_list.append(f"Player #{idx+1}: {field_name} is missing.")
+                    error = True
+
+            # Check duplicates in database
+            code = str(athlete.get("Player Code","")).strip()
             if code and code in seen_codes:
                 errors_list.append(f"Player #{idx+1}: Player Code '{code}' already exists!")
                 error = True
-            else:
-                if code: seen_codes.add(code)
+            elif code:
+                seen_codes.add(code)
 
-        # Check duplicates inside the same batch
+        # Check duplicates within batch
         batch_codes = [str(a.get("Player Code","")).strip() for a in athletes_data if a.get("Player Code","").strip()!=""]
         dup_in_batch = {c for c in batch_codes if batch_codes.count(c)>1}
         for dcode in dup_in_batch:
@@ -314,7 +319,7 @@ if st.session_state.page == "registration":
             error = True
 
         if error:
-            st.error("⚠️ Please fix the highlighted errors before submitting:")
+            st.error("⚠️ Please fix all errors before submitting:")
             for msg in errors_list:
                 st.write(f"- {msg}")
             st.stop()
@@ -325,7 +330,7 @@ if st.session_state.page == "registration":
         save_data(df)
         st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-        # Reset inputs
+        # Reset all inputs
         for key in ["club","nationality","coach_name","phone_number"]:
             st.session_state[key] = ""
         for k in list(st.session_state.keys()):
