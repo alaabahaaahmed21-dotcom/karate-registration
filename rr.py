@@ -107,7 +107,7 @@ if st.session_state.page == "select_championship":
         [
             "African Master Course",
             "North Africa Traditional Karate Championship",
-            "Unified Karate Championship (General)"
+            "United Karate Championship (General)"
         ]
     )
 
