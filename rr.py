@@ -84,7 +84,7 @@ if st.session_state.page == "select_championship":
     championship = st.selectbox(
         "Please select the championship you want to register for:",
         [
-            "African Master Course",  # تم دمج Master و General هنا
+            "African Master Course",
             "North Africa Traditional Karate Championship",
             "Unified Karate Championship (General)"
         ]
@@ -132,11 +132,6 @@ if st.session_state.page == "registration":
         "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
     ]
 
-    # -------- اختيار نوع الدورة لو African Master Course --------
-    course_type = None
-    if st.session_state.selected_championship == "African Master Course":
-        course_type = st.selectbox("Select Course Type:", ["Master", "General"])
-
     athletes_data = []
     submit_count = st.session_state.submit_count
 
@@ -176,6 +171,7 @@ if st.session_state.page == "registration":
 
             # -------- African Master Course --------
             if st.session_state.selected_championship == "African Master Course":
+                course_type = st.selectbox("Select Course Type:", ["Master", "General"])
                 st.markdown("<label>Club</label>", unsafe_allow_html=True)
                 club = st.text_input("", key=f"club{key_suffix}")
 
@@ -191,12 +187,13 @@ if st.session_state.page == "registration":
                 competitions = []  # لا يوجد مسابقات
 
             else:
-                # -------- البطولات الأخرى (كما هي) --------
+                # -------- البطولات الأخرى كما في الكود القديم --------
                 st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
                 st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
                 st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
                 st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
                 competitions = st.multiselect("Competitions", competitions_list, key=f"comp{key_suffix}")
+                course_type = None
 
             athletes_data.append({
                 "Athlete Name": athlete_name,
