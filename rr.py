@@ -147,7 +147,6 @@ if st.session_state.page == "registration":
             # Default label colors
             name_color = "black"
             code_color = "black"
-            comp_color = "black"
             belt_color = "black"
             if st.session_state.get(f"name_empty_{i}", False):
                 name_color = "red"
@@ -155,8 +154,6 @@ if st.session_state.page == "registration":
                 code_color = "red"
             if st.session_state.get(f"belt_empty_{i}", False):
                 belt_color = "red"
-            if st.session_state.get(f"comp_empty_{i}", False):
-                comp_color = "red"
 
             # -------- الفورم حسب نوع البطولة --------
             st.markdown(f"<label style='color:{name_color}'>Athlete Name</label>", unsafe_allow_html=True)
@@ -188,11 +185,9 @@ if st.session_state.page == "registration":
                 st.markdown("<label>Phone Number</label>", unsafe_allow_html=True)
                 phone_number = st.text_input("", key=f"phone{key_suffix}")
 
-                # Competitions حسب نوع الدورة
-                if course_type == "Master":
-                    competitions = st.multiselect("Competitions", ["Individual Kata", "Kumite"])
-                else:
-                    competitions = st.multiselect("Competitions", ["Kata Team", "Fuko Go"])
+                # لا يوجد حقل Competitions هنا
+                competitions = []
+
             else:
                 # باقي البطولات: نفس الكود القديم
                 st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
@@ -228,7 +223,6 @@ if st.session_state.page == "registration":
             st.session_state[f"name_empty_{i}"] = False
             st.session_state[f"code_empty_{i}"] = False
             st.session_state[f"belt_empty_{i}"] = False
-            st.session_state[f"comp_empty_{i}"] = False
 
         # Check for repeated Player Codes
         codes_in_form = [athlete["Player Code"] for athlete in athletes_data]
@@ -246,9 +240,6 @@ if st.session_state.page == "registration":
                 error_found = True
             if not athlete["Belt Degree"]:
                 st.session_state[f"belt_empty_{idx}"] = True
-                error_found = True
-            if len(athlete["Competitions List"]) == 0:
-                st.session_state[f"comp_empty_{idx}"] = True
                 error_found = True
             if athlete["Player Code"] in df["Player Code"].values:
                 st.error(f"⚠️ Player Code {athlete['Player Code']} already exists!")
