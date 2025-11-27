@@ -46,17 +46,25 @@ if "page" not in st.session_state:
 DATA_FILE = Path("athletes_data.csv")
 
 def load_data():
-    if DATA_FILE.exists():
-        return pd.read_csv(DATA_FILE)
-    else:
-        return pd.DataFrame(columns=[
-            "Championship",
-            "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
-            "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
-        ])
+    required_cols = [
+        "Championship",
+        "Athlete Name", "Club", "Nationality", "Coach Name", "Phone Number",
+        "Date of Birth", "Sex", "Player Code", "Belt Degree", "Competitions"
+    ]
 
-def save_data(df):
-    df.to_csv(DATA_FILE, index=False)
+    if DATA_FILE.exists():
+        df = pd.read_csv(DATA_FILE)
+
+        # إضافة الأعمدة الناقصة لو الملف قديم
+        for col in required_cols:
+            if col not in df.columns:
+                df[col] = ""
+
+        # إعادة ترتيب الأعمدة
+        return df[required_cols]
+
+    else:
+        return pd.DataFrame(columns=required_cols)
 
 # -------- SESSION STATE DEFAULTS --------
 for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
