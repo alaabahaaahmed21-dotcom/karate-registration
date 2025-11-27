@@ -43,7 +43,7 @@ st.markdown("""
     flex-wrap: nowrap;
 }
 .image-row img {
-    width: 90px;
+    width: 80px;
     height: auto;
 }
 </style>
@@ -244,7 +244,7 @@ if st.session_state.page == "registration":
 
                     federation = st.selectbox(
                         "Select Federation",
-                        ["Egyptian Traditional Karate Federation", "Unified General Federation"],
+                        ["Egyptian Traditional Karate Federation", "United General Federation"],
                         key=f"fed{key_suffix}"
                     )
 
