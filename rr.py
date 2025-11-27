@@ -40,7 +40,7 @@ st.markdown("""
     flex-wrap: nowrap;
 }
 .image-row img {
-    width: 70px;
+    width: 90px;
     height: auto;
 }
 body {
