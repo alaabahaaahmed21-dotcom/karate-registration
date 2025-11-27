@@ -204,90 +204,80 @@ if st.session_state.page == "registration":
                 })
 
     # ------------------------------------------------------------
-    # Other Championships
-    # ------------------------------------------------------------
+   # Other Championships (African Open & North Africa)
+# ------------------------------------------------------------
 
-    else:
+else:
 
-        st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
-        st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
-        st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
-        st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
+    st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
+    st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
+    st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
+    st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
 
-        num_players = st.number_input("Number of players to add:", min_value=1, value=1)
+    num_players = st.number_input("Number of players to add:", min_value=1, value=1)
 
-        for i in range(num_players):
+    for i in range(num_players):
 
-            key_suffix = f"_{submit_count}_{i}"
+        key_suffix = f"_{submit_count}_{i}"
 
-            with st.expander(f"Player {i+1}"):
+        with st.expander(f"Player {i+1}"):
 
-                athlete_name = st.text_input("Athlete Name", key=f"name{key_suffix}")
+            athlete_name = st.text_input("Athlete Name", key=f"name{key_suffix}")
 
-                dob = st.date_input("Date of Birth", min_value=date(1960,1,1),
-                                    max_value=date.today(), key=f"dob{key_suffix}")
+            dob = st.date_input("Date of Birth", min_value=date(1960,1,1),
+                                max_value=date.today(), key=f"dob{key_suffix}")
 
-                sex = st.selectbox("Sex", ["Male", "Female"], key=f"sex{key_suffix}")
+            sex = st.selectbox("Sex", ["Male", "Female"], key=f"sex{key_suffix}")
 
-                code = st.text_input("Player Code", key=f"code{key_suffix}")
+            code = st.text_input("Player Code", key=f"code{key_suffix}")
 
-                belt = st.selectbox("Belt Degree", [
-                    "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
-                    "Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3",
-                    "Kyu Junior brown 2","Kyu Junior brown 1","Kyu Senior yellow 7","Kyu Senior yellow 6",
-                    "Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2",
-                    "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
-                ], key=f"belt{key_suffix}")
+            belt = st.selectbox("Belt Degree", [
+                "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
+                "Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3",
+                "Kyu Junior brown 2","Kyu Junior brown 1","Kyu Senior yellow 7","Kyu Senior yellow 6",
+                "Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2",
+                "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
+            ], key=f"belt{key_suffix}")
 
-                # Federation
-                if st.session_state.selected_championship == "North Africa Traditional Karate Championship":
+            # Federation selection for both African Open & North Africa Championships
+            federation = st.selectbox(
+                "Select Federation",
+                ["Egyptian Traditional Karate Federation", "United General Federation"],
+                key=f"fed{key_suffix}"
+            )
 
-                    federation = st.selectbox(
-                        "Select Federation",
-                        ["Egyptian Traditional Karate Federation", "United General Federation"],
-                        key=f"fed{key_suffix}"
-                    )
+            if federation == "Egyptian Traditional Karate Federation":
+                comp_list = [
+                    "Individual kata","Kata team","Individual kumite","Fuko go",
+                    "Inbo mix","Inbo male","Inbo female","Kumite team"
+                ]
+            else:
+                comp_list = [
+                    "Individual kata","Kata team","Kumite Ibon","Kumite Nihon",
+                    "Kumite Sanbon","Kumite Rote shine"
+                ]
 
-                    if federation == "Egyptian Traditional Karate Federation":
-                        comp_list = [
-                            "Individual kata","Kata team","Individual kumite","Fuko go",
-                            "Inbo mix","Inbo male","Inbo female","Kumite team"
-                        ]
-                    else:
-                        comp_list = [
-                            "Individual kata","Kata team","Kumite Ibon","Kumite Nihon",
-                            "Kumite Sanbon","Kumite Rote shine"
-                        ]
+            competitions = st.multiselect("Competitions", comp_list, key=f"comp{key_suffix}")
 
-                else:
-                    federation = ""
-                    comp_list = [
-                        "Individual Kata","Kata Team","Individual Kumite","Fuko Go",
-                        "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"
-                    ]
+            pic = st.file_uploader("Profile Picture", type=["png","jpg","jpeg"], key=f"pic{key_suffix}")
 
-                competitions = st.multiselect("Competitions", comp_list, key=f"comp{key_suffix}")
-
-                pic = st.file_uploader("Profile Picture", type=["png","jpg","jpeg"], key=f"pic{key_suffix}")
-
-                athletes_data.append({
-                    "Athlete Name": athlete_name.strip(),
-                    "Club": st.session_state.club.strip(),
-                    "Nationality": st.session_state.nationality.strip(),
-                    "Coach Name": st.session_state.coach_name.strip(),
-                    "Phone Number": st.session_state.phone_number.strip(),
-                    "Date of Birth": str(dob),
-                    "Sex": sex,
-                    "Player Code": code.strip(),
-                    "Belt Degree": belt,
-                    "Competitions": ", ".join(competitions),
-                    "Competitions List": competitions,
-                    "Federation": federation,
-                    "Profile Picture": pic.name if pic else "",
-                    "index": i,
-                    "Championship": st.session_state.selected_championship
-                })
-
+            athletes_data.append({
+                "Athlete Name": athlete_name.strip(),
+                "Club": st.session_state.club.strip(),
+                "Nationality": st.session_state.nationality.strip(),
+                "Coach Name": st.session_state.coach_name.strip(),
+                "Phone Number": st.session_state.phone_number.strip(),
+                "Date of Birth": str(dob),
+                "Sex": sex,
+                "Player Code": code.strip(),
+                "Belt Degree": belt,
+                "Competitions": ", ".join(competitions),
+                "Competitions List": competitions,
+                "Federation": federation,
+                "Profile Picture": pic.name if pic else "",
+                "index": i,
+                "Championship": st.session_state.selected_championship
+            })
 # ------------------------------------------------------------
 # SUBMIT BUTTON  — FIXED INDENTATION
 # ------------------------------------------------------------
