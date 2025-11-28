@@ -7,7 +7,7 @@ import base64
 import requests
 
 # ---------------------- GitHub Auto Backup ----------------------
-GITHUB_TOKEN = "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"   # ← ضعي التوكن هنا
+GITHUB_TOKEN = "github_pat"   
 GITHUB_REPO = "alaabahaaahmed21-dotcom/karate-registration"
 GITHUB_FILE_PATH = "athletes_data.csv"
 
@@ -102,10 +102,10 @@ def load_data():
 
 # -------- Replace save_data with GitHub backup version --------
 def save_data(df):
-    df.to_csv(DATA_FILE, index=False)   # حفظ محلي
+    df.to_csv(DATA_FILE, index=False)  
     try:
         csv_txt = df.to_csv(index=False)
-        upload_to_github(csv_txt)       # رفع لجيتهب
+        upload_to_github(csv_txt)     
     except Exception as e:
         st.warning(f"GitHub Backup Failed: {e}")
 
