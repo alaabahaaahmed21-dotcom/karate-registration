@@ -8,19 +8,38 @@ import requests
 # ---------------------------------------------------
 # GOOGLE SHEET API (PUT YOUR WEB APP URL HERE)
 # ---------------------------------------------------
-GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbw4SyAM8oOrmuovsDLrG0ZSHPGcVjVKDZ3pUhbGdvZmKsUer6kX6kQsXmJAskCGD23cNg/exec"
+GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzyYLYMc1E7bsMffL1EryLh0zojN_dVSMMQ5qZc64_cT7acATsibCetyJLnZyq-YPQR5Q/exec"
 
-
+# ---------------------------------------------------
+# Save a single row to Google Sheets
+# ---------------------------------------------------
 def save_to_google_sheet(row):
-    """Send a single row (dict) to Google Sheets via Apps Script Web App"""
     try:
         r = requests.post(GOOGLE_SHEET_API, json=row)
         return r.status_code == 200
-    except:
+    except Exception as e:
+        print("Error saving to Google Sheet:", e)
         return False
 
+# ---------------------------------------------------
+# Upload image to Google Drive via the same API
+# ---------------------------------------------------
+def upload_image_to_drive(image_file):
+    if image_file is None:
+        return ""
+    try:
+        files = {"file": (image_file.name, image_file, image_file.type)}
+        r = requests.post(GOOGLE_SHEET_API + "?upload_image=1", files=files)
+        if r.status_code == 200:
+            return r.text  # expected: Drive link returned from Apps Script
+        return ""
+    except Exception as e:
+        print("Error uploading image:", e)
+        return ""
 
-# ---------------------- Safe Rerun ----------------------
+# ---------------------------------------------------
+# Safe rerun for Streamlit
+# ---------------------------------------------------
 def safe_rerun():
     try:
         if hasattr(st, "rerun"):
@@ -32,79 +51,54 @@ def safe_rerun():
     except:
         pass
 
-
-# ---------------------- Logos ----------------------
+# ---------------------------------------------------
+# Logos
+# ---------------------------------------------------
 img1 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo1.png"
 img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo2.png"
 img3 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo3.png"
 img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo4.png"
 
-
-# ---------------------- CSS ----------------------
+# ---------------------------------------------------
+# CSS
+# ---------------------------------------------------
 st.markdown("""
 <style>
-.image-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: nowrap;
-}
-.image-row img {
-    width: 80px;
-    height: auto;
-}
+.image-row {display: flex; justify-content: center; gap: 10px; flex-wrap: nowrap;}
+.image-row img {width: 80px; height: auto;}
 </style>
 """, unsafe_allow_html=True)
 
-
-# ---------------------- Page State ----------------------
+# ---------------------------------------------------
+# Page state
+# ---------------------------------------------------
 if "page" not in st.session_state:
     st.session_state.page = "select_championship"
 
 DATA_FILE = Path("athletes_data.csv")
 
-
-# ---------------------- Load Data ----------------------
+# ---------------------------------------------------
+# Load data
+# ---------------------------------------------------
 def load_data():
     cols = [
         "Championship", "Athlete Name", "Club", "Nationality", "Coach Name",
         "Phone Number", "Date of Birth", "Sex", "Player Code",
         "Belt Degree", "Competitions", "Federation", "Profile Picture"
     ]
-
     if DATA_FILE.exists():
         df = pd.read_csv(DATA_FILE)
         for c in cols:
             if c not in df.columns:
                 df[c] = ""
         return df[cols]
-
     return pd.DataFrame(columns=cols)
 
-def upload_image_to_drive(image_file):
-    if image_file is None:
-        return ""
-
-    files = {
-        "file": (image_file.name, image_file, image_file.type)
-    }
-
-    try:
-        r = requests.post(GOOGLE_SHEET_API + "?upload_image=1", files=files)
-        if r.status_code == 200:
-            return r.text  # this will be Drive link
-        else:
-            return ""
-    except:
-        return ""
-
-
-
-# ---------------------- Save Data (CSV + Google Sheet) ----------------------
+# ---------------------------------------------------
+# Save data locally + Google Sheet
+# ---------------------------------------------------
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)   # Save local copy
-
-    # Save each row to Google Sheets
     for _, row in df.iterrows():
         ok = save_to_google_sheet({
             "Championship": row["Championship"],
@@ -121,22 +115,20 @@ def save_data(df):
             "Federation": row["Federation"],
             "Profile Picture": row["Profile Picture"]
         })
-
         if not ok:
             st.warning("⚠️ Failed to save some records to Google Sheets.")
 
-
-# ---------------------- Defaults ----------------------
+# ---------------------------------------------------
+# Defaults
+# ---------------------------------------------------
 for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
     if key not in st.session_state:
         st.session_state[key] = "" if key != "submit_count" else 0
-
 
 # =====================================================
 # PAGE 1 — Select Championship
 # =====================================================
 if st.session_state.page == "select_championship":
-
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -147,7 +139,6 @@ if st.session_state.page == "select_championship":
     """, unsafe_allow_html=True)
 
     st.title("🏆 Select Championship")
-
     championship = st.selectbox(
         "Please select the championship you want to register for:",
         [
@@ -161,9 +152,7 @@ if st.session_state.page == "select_championship":
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
         safe_rerun()
-
     st.stop()
-
 
 # =====================================================
 # PAGE 2 — Registration
@@ -195,11 +184,9 @@ if st.session_state.page == "registration":
     # African Master Course
     # ------------------------------------------------------------
     if st.session_state.selected_championship == "African Master Course":
-
         course_type = st.selectbox("Choose course type:", ["Master", "General"])
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
         num_players = st.number_input("Number of players to add:", min_value=1, value=1)
-
         belt_options = [
             "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
             "Kyu Junior green 6","Kyu Junior green blue 5","Kyu Junior blue 4","Kyu Junior blue 3",
@@ -207,7 +194,6 @@ if st.session_state.page == "registration":
             "Kyu Senior orange 5","Kyu Senior orange 4","Kyu Senior green 3","Kyu Senior blue 2",
             "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
         ]
-
         for i in range(num_players):
             key_suffix = f"_{submit_count}_{i}"
             with st.expander(f"Player {i+1}"):
@@ -220,7 +206,6 @@ if st.session_state.page == "registration":
                 code = st.text_input("Player Code", key=f"code{key_suffix}")
                 belt = st.selectbox("Belt Degree", belt_options, key=f"belt{key_suffix}")
                 pic = st.file_uploader("Profile Picture", type=["png","jpg","jpeg"], key=f"pic{key_suffix}")
-
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
                     "Club": st.session_state.club.strip(),
@@ -233,7 +218,7 @@ if st.session_state.page == "registration":
                     "Belt Degree": belt,
                     "Competitions": "",
                     "Federation": "",
-                   "Profile Picture": upload_image_to_drive(pic) if pic else "",
+                    "Profile Picture": upload_image_to_drive(pic) if pic else "",
                     "index": i,
                     "Championship": f"African Master Course - {course_type}"
                 })
@@ -242,13 +227,11 @@ if st.session_state.page == "registration":
     # Other Championships
     # ------------------------------------------------------------
     else:
-
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
         st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
         st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
         st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
         num_players = st.number_input("Number of players to add:", min_value=1, value=1)
-
         for i in range(num_players):
             key_suffix = f"_{submit_count}_{i}"
             with st.expander(f"Player {i+1}"):
@@ -269,7 +252,6 @@ if st.session_state.page == "registration":
                     "African Open Traditional Karate Championship",
                     "North Africa Unitied Karate Championship (General)"
                 ]
-
                 if st.session_state.selected_championship in federation_champs:
                     federation = st.selectbox(
                         "Select Federation",
@@ -308,23 +290,20 @@ if st.session_state.page == "registration":
                     "Belt Degree": belt,
                     "Competitions": ", ".join(competitions),
                     "Federation": federation,
-                    "Profile Picture": pic.name if pic else "",
+                    "Profile Picture": upload_image_to_drive(pic) if pic else "",
                     "index": i,
                     "Championship": st.session_state.selected_championship
                 })
-
 
 # ------------------------------------------------------------
 # SUBMIT BUTTON
 # ------------------------------------------------------------
 if st.button("Submit All"):
-
     df = load_data()
     error = False
     errors_list = []
 
     for athlete in athletes_data:
-
         name = athlete["Athlete Name"]
         code = athlete["Player Code"]
         belt = athlete["Belt Degree"]
@@ -335,15 +314,12 @@ if st.button("Submit All"):
         championship = athlete["Championship"]
         competitions = athlete["Competitions"]
 
-        # 1️⃣ منع التكرار داخل نفس البطولة فقط
+        # 1️⃣ منع التكرار داخل نفس البطولة
         existing_codes = set(
             df[df["Championship"] == championship]["Player Code"].astype(str)
         )
-
         if code and code in existing_codes:
-            errors_list.append(
-                f"Player Code '{code}' already exists in {championship}!"
-            )
+            errors_list.append(f"Player Code '{code}' already exists in {championship}!")
             error = True
 
         # 2️⃣ التأكد من الحقول المطلوبة
@@ -366,7 +342,6 @@ if st.button("Submit All"):
             if competitions.strip() == "":
                 errors_list.append("At least one competition is required.")
                 error = True
-        if st.session_state.selected_championship != "African Master Course":
             if not coach:
                 errors_list.append("Coach name is required.")
                 error = True
@@ -386,7 +361,6 @@ if st.button("Submit All"):
         df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
     save_data(df)
-
     st.success(f"✅ {len(athletes_data)} players registered successfully!")
     st.session_state.submit_count += 1
     st.rerun()
