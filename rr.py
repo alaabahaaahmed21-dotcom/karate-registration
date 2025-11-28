@@ -6,7 +6,7 @@ from pathlib import Path
 import requests
 
 # ---------------------------------------------------
-# GOOGLE SHEET API (PUT YOUR WEB APP URL HERE)
+# GOOGLE SHEET API
 # ---------------------------------------------------
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzyYLYMc1E7bsMffL1EryLh0zojN_dVSMMQ5qZc64_cT7acATsibCetyJLnZyq-YPQR5Q/exec"
 
