@@ -3,6 +3,35 @@ import pandas as pd
 from datetime import date
 import io
 from pathlib import Path
+import base64
+import requests
+
+# ---------------------- GitHub Auto Backup ----------------------
+GITHUB_TOKEN = "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"   # ← ضعي التوكن هنا
+GITHUB_REPO = "alaabahaaahmed21-dotcom/karate-registration"
+GITHUB_FILE_PATH = "athletes_data.csv"
+
+def get_github_file_sha():
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    r = requests.get(url, headers=headers)
+    if r.status_code == 200:
+        return r.json()["sha"]
+    return None
+
+def upload_to_github(csv_text):
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
+    sha = get_github_file_sha()
+
+    data = {
+        "message": "Auto update from Streamlit app",
+        "content": base64.b64encode(csv_text.encode()).decode(),
+    }
+    if sha:
+        data["sha"] = sha
+
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    requests.put(url, json=data, headers=headers)
 
 # ---------------------- Safe Rerun ----------------------
 def safe_rerun():
@@ -22,7 +51,6 @@ def safe_rerun():
                 pass
 
         st.error("❌ Streamlit version does not support rerun. Please upgrade Streamlit.")
-
     except Exception as fatal:
         st.error("Unexpected error during rerun:")
         st.exception(fatal)
@@ -72,8 +100,14 @@ def load_data():
 
     return pd.DataFrame(columns=cols)
 
+# -------- Replace save_data with GitHub backup version --------
 def save_data(df):
-    df.to_csv(DATA_FILE, index=False)
+    df.to_csv(DATA_FILE, index=False)   # حفظ محلي
+    try:
+        csv_txt = df.to_csv(index=False)
+        upload_to_github(csv_txt)       # رفع لجيتهب
+    except Exception as e:
+        st.warning(f"GitHub Backup Failed: {e}")
 
 # ---------------------- Defaults ----------------------
 for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
@@ -117,12 +151,10 @@ if st.session_state.page == "select_championship":
 # =====================================================
 if st.session_state.page == "registration":
 
-    # Back button
     if st.button("⬅ Back to Championship Selection"):
         st.session_state.page = "select_championship"
         safe_rerun()
 
-    # Logos
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -181,7 +213,6 @@ if st.session_state.page == "registration":
                     "Player Code": code.strip(),
                     "Belt Degree": belt,
                     "Competitions": "",
-                    "Competitions List": [],
                     "Federation": "",
                     "Profile Picture": pic.name if pic else "",
                     "index": i,
@@ -215,7 +246,6 @@ if st.session_state.page == "registration":
                     "Kyu Senior brown 1","Dan 1","Dan 2","Dan 3","Dan 4","Dan 5","Dan 6","Dan 7","Dan 8"
                 ], key=f"belt{key_suffix}")
 
-                # Federation
                 federation_champs = [
                     "African Open Traditional Karate Championship",
                     "North Africa Unitied Karate Championship (General)"
@@ -258,7 +288,6 @@ if st.session_state.page == "registration":
                     "Player Code": code.strip(),
                     "Belt Degree": belt,
                     "Competitions": ", ".join(competitions),
-                    "Competitions List": competitions,
                     "Federation": federation,
                     "Profile Picture": pic.name if pic else "",
                     "index": i,
@@ -276,24 +305,21 @@ if st.session_state.page == "registration":
         error = False
         errors_list = []
 
-        # إنشاء set للكودات داخل نفس البطولة
         current_champ_codes = set(
             df[df["Championship"] == st.session_state.selected_championship]["Player Code"].astype(str).values
         )
 
-        # التحقق لكل لاعب
         for athlete in athletes_data:
             idx = athlete["index"]
-            name = athlete.get("Athlete Name","").strip()
-            code = str(athlete.get("Player Code","")).strip()
-            belt = athlete.get("Belt Degree","")
+            name = athlete["Athlete Name"]
+            code = athlete["Player Code"]
+            belt = athlete["Belt Degree"]
             comps = athlete.get("Competitions List", [])
-            club = athlete.get("Club","").strip()
-            nationality = athlete.get("Nationality","").strip()
-            coach = athlete.get("Coach Name","").strip()
-            phone = athlete.get("Phone Number","").strip()
+            club = athlete["Club"]
+            nationality = athlete["Nationality"]
+            coach = athlete["Coach Name"]
+            phone = athlete["Phone Number"]
 
-            # التحقق من الحقول الفارغة
             if not name:
                 errors_list.append(f"Player #{idx+1}: Athlete Name is missing.")
                 error = True
@@ -303,8 +329,8 @@ if st.session_state.page == "registration":
             if not belt:
                 errors_list.append(f"Player #{idx+1}: Belt Degree is missing.")
                 error = True
-            if st.session_state.selected_championship != "African Master Course" and len(comps) == 0:
-                errors_list.append(f"Player #{idx+1} ({name or 'no name'}): Please select at least one competition.")
+            if st.session_state.selected_championship != "African Master Course" and comps == []:
+                errors_list.append(f"Player #{idx+1}: Select at least one competition.")
                 error = True
             if not club:
                 errors_list.append(f"Player #{idx+1}: Club is missing.")
@@ -319,42 +345,36 @@ if st.session_state.page == "registration":
                 errors_list.append(f"Player #{idx+1}: Phone Number is missing.")
                 error = True
 
-            # التحقق من تكرار الكود داخل نفس البطولة فقط
             if code and code in current_champ_codes:
-                errors_list.append(f"Player #{idx+1}: Player Code '{code}' already exists in this championship!")
+                errors_list.append(f"Player #{idx+1}: Code '{code}' already exists!")
                 error = True
             else:
-                if code: current_champ_codes.add(code)
+                current_champ_codes.add(code)
 
-        # تحقق من التكرار داخل نفس الدفعة الحالية
-        batch_codes = [str(a.get("Player Code","")).strip() for a in athletes_data if a.get("Player Code","").strip()!=""]
-        dup_in_batch = {c for c in batch_codes if batch_codes.count(c) > 1}
-        for dcode in dup_in_batch:
-            indices = [i+1 for i,a in enumerate(athletes_data) if str(a.get("Player Code","")).strip()==dcode]
-            errors_list.append(f"Duplicate in submission: Player Code '{dcode}' used in players {indices}.")
+        batch_codes = [a["Player Code"] for a in athletes_data if a["Player Code"]]
+        dupes = {c for c in batch_codes if batch_codes.count(c) > 1}
+        for d in dupes:
+            idxs = [i+1 for i,a in enumerate(athletes_data) if a["Player Code"] == d]
+            errors_list.append(f"Duplicate code '{d}' in players {idxs}.")
             error = True
 
         if error:
-            st.error("⚠️ Please fix the highlighted errors before submitting:")
-            for msg in errors_list:
-                st.write(f"- {msg}")
+            st.error("⚠️ Fix errors before submitting:")
+            for m in errors_list:
+                st.write("-", m)
             st.stop()
 
-        # Save Data
         for athlete in athletes_data:
             df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
         save_data(df)
+
         st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-        # Reset all fields
-        for key in ["club","nationality","coach_name","phone_number"]:
+        for key in ["club", "nationality", "coach_name", "phone_number"]:
             st.session_state[key] = ""
+
         for k in list(st.session_state.keys()):
-            if (
-                "name_" in k or "dob_" in k or "sex_" in k or "code_" in k or
-                "belt_" in k or "comp_" in k or "pic_" in k or "fed_" in k or
-                "nat_" in k or "phone_" in k
-            ):
+            if any(x in k for x in ["name_","dob_","sex_","code_","belt_","comp_","pic_","fed_","nat_","phone_"]):
                 del st.session_state[k]
 
         st.session_state.submit_count += 1
