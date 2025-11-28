@@ -71,15 +71,28 @@ def load_data():
 
 # ---------------- Upload Image ----------------
 def upload_image_to_drive(image_file):
+    """
+    Upload a single image to Google Drive via the Apps Script Web App
+    Returns the public URL of the uploaded image, or empty string if failed
+    """
     if image_file is None:
         return ""
-    files = {"file": (image_file.name, image_file, image_file.type)}
+
+    # نجهز الملف للإرسال
+    files = {
+        "file": (image_file.name, image_file.getvalue(), image_file.type)
+    }
+
     try:
+        # نرسل POST للـ Apps Script
         r = requests.post(GOOGLE_SHEET_API + "?upload_image=1", files=files)
-        if r.status_code == 200:
-            return r.text
-        return ""
-    except:
+        if r.status_code == 200 and r.text:
+            # Apps Script لازم يرد بالـ URL مباشرة
+            return r.text.strip()
+        else:
+            return ""
+    except Exception as e:
+        st.warning(f"Failed to upload image {image_file.name}: {e}")
         return ""
 
 # ---------------- Save Data ----------------
