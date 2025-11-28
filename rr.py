@@ -81,6 +81,24 @@ def load_data():
 
     return pd.DataFrame(columns=cols)
 
+def upload_image_to_drive(image_file):
+    if image_file is None:
+        return ""
+
+    files = {
+        "file": (image_file.name, image_file, image_file.type)
+    }
+
+    try:
+        r = requests.post(GOOGLE_SHEET_API + "?upload_image=1", files=files)
+        if r.status_code == 200:
+            return r.text  # this will be Drive link
+        else:
+            return ""
+    except:
+        return ""
+
+
 
 # ---------------------- Save Data (CSV + Google Sheet) ----------------------
 def save_data(df):
@@ -215,7 +233,7 @@ if st.session_state.page == "registration":
                     "Belt Degree": belt,
                     "Competitions": "",
                     "Federation": "",
-                    "Profile Picture": pic.name if pic else "",
+                   "Profile Picture": upload_image_to_drive(pic) if pic else "",
                     "index": i,
                     "Championship": f"African Master Course - {course_type}"
                 })
@@ -299,96 +317,79 @@ if st.session_state.page == "registration":
 # ------------------------------------------------------------
 # SUBMIT BUTTON
 # ------------------------------------------------------------
-if st.session_state.page == "registration":
+if st.button("Submit All"):
 
-    if st.button("Submit All"):
+    df = load_data()
+    error = False
+    errors_list = []
 
-        df = load_data()
-        error = False
-        errors_list = []
+    for athlete in athletes_data:
 
-        # Unique code validation
-        current_champ_codes = set(
-            df[df["Championship"] == st.session_state.selected_championship]["Player Code"].astype(str).values
+        name = athlete["Athlete Name"]
+        code = athlete["Player Code"]
+        belt = athlete["Belt Degree"]
+        club = athlete["Club"]
+        nationality = athlete["Nationality"]
+        coach = athlete["Coach Name"]
+        phone = athlete["Phone Number"]
+        championship = athlete["Championship"]
+        competitions = athlete["Competitions"]
+
+        # 1️⃣ منع التكرار داخل نفس البطولة فقط
+        existing_codes = set(
+            df[df["Championship"] == championship]["Player Code"].astype(str)
         )
 
-        for athlete in athletes_data:
-            idx = athlete["index"]
-            name = athlete["Athlete Name"]
-            code = athlete["Player Code"]
-            belt = athlete["Belt Degree"]
-            comps = athlete.get("Competitions List", [])
-            club = athlete["Club"]
-            nationality = athlete["Nationality"]
-            coach = athlete["Coach Name"]
-            phone = athlete["Phone Number"]
-
-            # Required fields
-            if not name:
-                errors_list.append(f"Player #{idx+1}: Athlete Name is missing.")
-                error = True
-            if not code:
-                errors_list.append(f"Player #{idx+1}: Player Code is missing.")
-                error = True
-            if not belt:
-                errors_list.append(f"Player #{idx+1}: Belt Degree is missing.")
-                error = True
-            if st.session_state.selected_championship != "African Master Course" and athlete["Competitions"] == "":
-                errors_list.append(f"Player #{idx+1}: Select at least one competition.")
-                error = True
-            if not club:
-                errors_list.append(f"Player #{idx+1}: Club is missing.")
-                error = True
-            if not nationality:
-                errors_list.append(f"Player #{idx+1}: Nationality is missing.")
-                error = True
-            if not coach and st.session_state.selected_championship != "African Master Course":
-                errors_list.append(f"Player #{idx+1}: Coach Name is missing.")
-                error = True
-            if not phone:
-                errors_list.append(f"Player #{idx+1}: Phone Number is missing.")
-                error = True
-
-            # Duplicate within existing data
-            if code and code in current_champ_codes:
-                errors_list.append(f"Player #{idx+1}: Code '{code}' already exists!")
-                error = True
-            else:
-                current_champ_codes.add(code)
-
-        # Duplicate codes entered in this submission
-        batch_codes = [a["Player Code"] for a in athletes_data if a["Player Code"]]
-        dupes = {c for c in batch_codes if batch_codes.count(c) > 1}
-        for d in dupes:
-            idxs = [i+1 for i,a in enumerate(athletes_data) if a["Player Code"] == d]
-            errors_list.append(f"Duplicate code '{d}' in players {idxs}.")
+        if code and code in existing_codes:
+            errors_list.append(
+                f"Player Code '{code}' already exists in {championship}!"
+            )
             error = True
 
-        if error:
-            st.error("⚠️ Fix errors before submitting:")
-            for m in errors_list:
-                st.write("-", m)
-            st.stop()
+        # 2️⃣ التأكد من الحقول المطلوبة
+        if not name:
+            errors_list.append("Athlete name is required.")
+            error = True
+        if not code:
+            errors_list.append("Player code is required.")
+            error = True
+        if not belt:
+            errors_list.append("Belt degree is required.")
+            error = True
+        if not club:
+            errors_list.append("Club is required.")
+            error = True
+        if not nationality:
+            errors_list.append("Nationality is required.")
+            error = True
+        if st.session_state.selected_championship != "African Master Course":
+            if competitions.strip() == "":
+                errors_list.append("At least one competition is required.")
+                error = True
+        if st.session_state.selected_championship != "African Master Course":
+            if not coach:
+                errors_list.append("Coach name is required.")
+                error = True
+        if not phone:
+            errors_list.append("Phone number is required.")
+            error = True
 
-        # Save data
-        for athlete in athletes_data:
-            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+    # 3️⃣ عرض الأخطاء إن وجدت
+    if error:
+        st.error("Fix the following issues:")
+        for m in errors_list:
+            st.write("- ", m)
+        st.stop()
 
-        save_data(df)
+    # 4️⃣ إضافة اللاعبين
+    for athlete in athletes_data:
+        df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
-        st.success(f"✅ {len(athletes_data)} players registered successfully!")
+    save_data(df)
 
-        # Reset page data
-        for key in ["club", "nationality", "coach_name", "phone_number"]:
-            st.session_state[key] = ""
-
-        for k in list(st.session_state.keys()):
-            if any(x in k for x in ["name_","dob_","sex_","code_","belt_","comp_","pic_","fed_","nat_","phone_"]):
-                del st.session_state[k]
-
-        st.session_state.submit_count += 1
-        st.rerun()
-
+    st.success(f"✅ {len(athletes_data)} players registered successfully!")
+    st.session_state.submit_count += 1
+    st.rerun()
 
 # ---------------------- ADMIN PANEL ----------------------
 st.sidebar.header("Admin Login")
