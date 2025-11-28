@@ -115,7 +115,7 @@ def save_data(df):
             "Profile Picture": row["Profile Picture"]
         })
         if not ok:
-            st.warning("⚠️ Failed to save some records to Google Sheets.")
+            st.warning(".")
 
 # ---------------- Defaults ----------------
 for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
