@@ -6,7 +6,7 @@ from pathlib import Path
 import requests
 
 # ---------------- Google Sheet API ----------------
-GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbye1YCPzENzCgfqziRijjZo6rQHpWfVC9c6gQ_Dto3WHh8wiB-hZfp6wyEb5PE7UFz0qw/exec"  
+GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzRmUNQPz93LiFNcTMKYS0HDnl9-NiTpTdT19-TaAnecRhM5NC8i3VoCMZJJ30N2NWimw/exec"  
 
 def save_to_google_sheet(row):
     """Send a single row (dict) to Google Sheets via Apps Script Web App"""
