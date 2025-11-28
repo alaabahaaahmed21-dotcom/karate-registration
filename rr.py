@@ -3,37 +3,42 @@ import pandas as pd
 from datetime import date
 import io
 from pathlib import Path
-import base64
 import requests
+
+# ---------------------------------------------------
+# GOOGLE SHEET API (PUT YOUR WEB APP URL HERE)
+# ---------------------------------------------------
+GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbw4SyAM8oOrmuovsDLrG0ZSHPGcVjVKDZ3pUhbGdvZmKsUer6kX6kQsXmJAskCGD23cNg/exec"
+
+
+def save_to_google_sheet(row):
+    """Send a single row (dict) to Google Sheets via Apps Script Web App"""
+    try:
+        r = requests.post(GOOGLE_SHEET_API, json=row)
+        return r.status_code == 200
+    except:
+        return False
 
 
 # ---------------------- Safe Rerun ----------------------
 def safe_rerun():
     try:
         if hasattr(st, "rerun"):
-            try:
-                st.rerun()
-                return
-            except Exception:
-                pass
+            st.rerun()
+        elif hasattr(st, "experimental_rerun"):
+            st.experimental_rerun()
+        else:
+            st.error("Streamlit version does not support rerun.")
+    except:
+        pass
 
-        if hasattr(st, "experimental_rerun"):
-            try:
-                st.experimental_rerun()
-                return
-            except Exception:
-                pass
-
-        st.error("❌ Streamlit version does not support rerun. Please upgrade Streamlit.")
-    except Exception as fatal:
-        st.error("Unexpected error during rerun:")
-        st.exception(fatal)
 
 # ---------------------- Logos ----------------------
 img1 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo1.png"
 img2 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo2.png"
 img3 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo3.png"
 img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registration/main/logo4.png"
+
 
 # ---------------------- CSS ----------------------
 st.markdown("""
@@ -51,13 +56,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 # ---------------------- Page State ----------------------
 if "page" not in st.session_state:
     st.session_state.page = "select_championship"
 
 DATA_FILE = Path("athletes_data.csv")
 
-# ---------------------- Load + Save ----------------------
+
+# ---------------------- Load Data ----------------------
 def load_data():
     cols = [
         "Championship", "Athlete Name", "Club", "Nationality", "Coach Name",
@@ -74,19 +81,38 @@ def load_data():
 
     return pd.DataFrame(columns=cols)
 
-# -------- Replace save_data with GitHub backup version --------
+
+# ---------------------- Save Data (CSV + Google Sheet) ----------------------
 def save_data(df):
-    df.to_csv(DATA_FILE, index=False)  
-    try:
-        csv_txt = df.to_csv(index=False)
-        upload_to_github(csv_txt)     
-    except Exception as e:
-        st.warning(f"GitHub Backup Failed: {e}")
+    df.to_csv(DATA_FILE, index=False)   # Save local copy
+
+    # Save each row to Google Sheets
+    for _, row in df.iterrows():
+        ok = save_to_google_sheet({
+            "Championship": row["Championship"],
+            "Athlete Name": row["Athlete Name"],
+            "Club": row["Club"],
+            "Nationality": row["Nationality"],
+            "Coach Name": row["Coach Name"],
+            "Phone Number": row["Phone Number"],
+            "Date of Birth": row["Date of Birth"],
+            "Sex": row["Sex"],
+            "Player Code": row["Player Code"],
+            "Belt Degree": row["Belt Degree"],
+            "Competitions": row["Competitions"],
+            "Federation": row["Federation"],
+            "Profile Picture": row["Profile Picture"]
+        })
+
+        if not ok:
+            st.warning("⚠️ Failed to save some records to Google Sheets.")
+
 
 # ---------------------- Defaults ----------------------
 for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
     if key not in st.session_state:
         st.session_state[key] = "" if key != "submit_count" else 0
+
 
 # =====================================================
 # PAGE 1 — Select Championship
@@ -119,6 +145,7 @@ if st.session_state.page == "select_championship":
         safe_rerun()
 
     st.stop()
+
 
 # =====================================================
 # PAGE 2 — Registration
@@ -268,6 +295,7 @@ if st.session_state.page == "registration":
                     "Championship": st.session_state.selected_championship
                 })
 
+
 # ------------------------------------------------------------
 # SUBMIT BUTTON
 # ------------------------------------------------------------
@@ -279,6 +307,7 @@ if st.session_state.page == "registration":
         error = False
         errors_list = []
 
+        # Unique code validation
         current_champ_codes = set(
             df[df["Championship"] == st.session_state.selected_championship]["Player Code"].astype(str).values
         )
@@ -294,6 +323,7 @@ if st.session_state.page == "registration":
             coach = athlete["Coach Name"]
             phone = athlete["Phone Number"]
 
+            # Required fields
             if not name:
                 errors_list.append(f"Player #{idx+1}: Athlete Name is missing.")
                 error = True
@@ -303,7 +333,7 @@ if st.session_state.page == "registration":
             if not belt:
                 errors_list.append(f"Player #{idx+1}: Belt Degree is missing.")
                 error = True
-            if st.session_state.selected_championship != "African Master Course" and comps == []:
+            if st.session_state.selected_championship != "African Master Course" and athlete["Competitions"] == "":
                 errors_list.append(f"Player #{idx+1}: Select at least one competition.")
                 error = True
             if not club:
@@ -319,12 +349,14 @@ if st.session_state.page == "registration":
                 errors_list.append(f"Player #{idx+1}: Phone Number is missing.")
                 error = True
 
+            # Duplicate within existing data
             if code and code in current_champ_codes:
                 errors_list.append(f"Player #{idx+1}: Code '{code}' already exists!")
                 error = True
             else:
                 current_champ_codes.add(code)
 
+        # Duplicate codes entered in this submission
         batch_codes = [a["Player Code"] for a in athletes_data if a["Player Code"]]
         dupes = {c for c in batch_codes if batch_codes.count(c) > 1}
         for d in dupes:
@@ -338,12 +370,15 @@ if st.session_state.page == "registration":
                 st.write("-", m)
             st.stop()
 
+        # Save data
         for athlete in athletes_data:
             df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+
         save_data(df)
 
         st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
+        # Reset page data
         for key in ["club", "nationality", "coach_name", "phone_number"]:
             st.session_state[key] = ""
 
@@ -353,6 +388,7 @@ if st.session_state.page == "registration":
 
         st.session_state.submit_count += 1
         st.rerun()
+
 
 # ---------------------- ADMIN PANEL ----------------------
 st.sidebar.header("Admin Login")
