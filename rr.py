@@ -6,32 +6,6 @@ from pathlib import Path
 import base64
 import requests
 
-# ---------------------- GitHub Auto Backup ----------------------
-GITHUB_TOKEN = "github_pat"   
-GITHUB_REPO = "alaabahaaahmed21-dotcom/karate-registration"
-GITHUB_FILE_PATH = "athletes_data.csv"
-
-def get_github_file_sha():
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    r = requests.get(url, headers=headers)
-    if r.status_code == 200:
-        return r.json()["sha"]
-    return None
-
-def upload_to_github(csv_text):
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
-    sha = get_github_file_sha()
-
-    data = {
-        "message": "Auto update from Streamlit app",
-        "content": base64.b64encode(csv_text.encode()).decode(),
-    }
-    if sha:
-        data["sha"] = sha
-
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    requests.put(url, json=data, headers=headers)
 
 # ---------------------- Safe Rerun ----------------------
 def safe_rerun():
