@@ -78,16 +78,13 @@ def upload_image_to_drive(image_file):
     if image_file is None:
         return ""
 
-    # نجهز الملف للإرسال
     files = {
         "file": (image_file.name, image_file.getvalue(), image_file.type)
     }
 
     try:
-        # نرسل POST للـ Apps Script
         r = requests.post(GOOGLE_SHEET_API + "?upload_image=1", files=files)
         if r.status_code == 200 and r.text:
-            # Apps Script لازم يرد بالـ URL مباشرة
             return r.text.strip()
         else:
             return ""
@@ -227,7 +224,7 @@ if st.session_state.page == "registration":
                 })
 
     else:
-        # باقي البطولات
+        # باقي البطولات (تم تعديل الصور هنا فقط)
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
         st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
         st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
@@ -275,6 +272,7 @@ if st.session_state.page == "registration":
                 competitions = st.multiselect("Competitions", comp_list, key=f"comp{key_suffix}")
                 pic = st.file_uploader("Profile Picture", type=["png","jpg","jpeg"], key=f"pic{key_suffix}")
 
+                # ⭐⭐⭐ تعديل الصور هنا فقط ⭐⭐⭐
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
                     "Club": st.session_state.club.strip(),
@@ -287,7 +285,7 @@ if st.session_state.page == "registration":
                     "Belt Degree": belt,
                     "Competitions": ", ".join(competitions),
                     "Federation": federation,
-                    "Profile Picture": pic.name if pic else "",
+                    "Profile Picture": upload_image_to_drive(pic) if pic else "",
                     "index": i,
                     "Championship": st.session_state.selected_championship
                 })
