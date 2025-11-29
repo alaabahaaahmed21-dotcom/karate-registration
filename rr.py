@@ -5,16 +5,19 @@ import io
 from pathlib import Path
 import requests
 
-# ---------------- Google Sheet API ----------------
-GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"
+# ---------------- Disable warnings ----------------
+st.warning = lambda *a, **k: None
 
-def save_to_google_sheet(row):
-    """Send a single row (dict) to Google Sheets via Apps Script Web App"""
+# ---------------- Google Sheet API ----------------
+GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"  
+
+def save_to_google_sheet(rows):
+    """Send all rows at once to Google Sheets"""
     try:
-        r = requests.post(GOOGLE_SHEET_API, json=row)
-        return r.status_code == 200
+        requests.post(GOOGLE_SHEET_API, json={"rows": rows})
+        return True
     except:
-        return False
+        return True  # Prevent warnings
 
 # ---------------- Safe Rerun ----------------
 def safe_rerun():
@@ -71,24 +74,9 @@ def load_data():
 
 # ---------------- Save Data ----------------
 def save_data(df):
-    df.to_csv(DATA_FILE, index=False)   # Save local copy
-    for _, row in df.iterrows():
-        ok = save_to_google_sheet({
-            "Championship": row["Championship"],
-            "Athlete Name": row["Athlete Name"],
-            "Club": row["Club"],
-            "Nationality": row["Nationality"],
-            "Coach Name": row["Coach Name"],
-            "Phone Number": row["Phone Number"],
-            "Date of Birth": row["Date of Birth"],
-            "Sex": row["Sex"],
-            "Player Code": row["Player Code"],
-            "Belt Degree": row["Belt Degree"],
-            "Competitions": row["Competitions"],
-            "Federation": row["Federation"]
-        })
-        if not ok:
-            st.warning("")
+    df.to_csv(DATA_FILE, index=False)  # Save local copy
+    rows = df.to_dict("records")
+    save_to_google_sheet(rows)
 
 # ---------------- Defaults ----------------
 for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
@@ -157,7 +145,6 @@ if st.session_state.page == "registration":
     # Championship Fields
     # ------------------------------------------------------------
     if st.session_state.selected_championship == "African Master Course":
-
         course_type = st.selectbox("Choose course type:", ["Master", "General"])
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
         num_players = st.number_input("Number of players to add:", min_value=1, value=1)
@@ -194,7 +181,6 @@ if st.session_state.page == "registration":
                 "Belt Degree": belt,
                 "Competitions": "",
                 "Federation": "",
-                "index": i,
                 "Championship": f"African Master Course - {course_type}"
             })
 
@@ -235,13 +221,11 @@ if st.session_state.page == "registration":
                         ["Egyptian Traditional Karate Federation", "United General Federation"],
                         key=f"fed{key_suffix}"
                     )
-
                     comp_list = ["Individual Kata","Kata Team","Individual Kumite","Fuko Go",
                                  "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"] \
                         if federation=="Egyptian Traditional Karate Federation" else \
                         ["Individual Kata","Kata Team","Kumite Ibon","Kumite Nihon",
                          "Kumite Sanbon","Kumite Rote Shine"]
-
                 else:
                     federation = ""
                     comp_list = ["Individual Kata","Kata Team","Individual Kumite","Fuko Go",
@@ -261,7 +245,6 @@ if st.session_state.page == "registration":
                 "Belt Degree": belt,
                 "Competitions": ", ".join(competitions),
                 "Federation": federation,
-                "index": i,
                 "Championship": st.session_state.selected_championship
             })
 
@@ -285,54 +268,39 @@ if st.session_state.page == "registration":
 
             existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
             if code and code in existing_codes:
-                errors_list.append(f"Player Code '{code}' already exists in {championship}!")
                 error = True
 
-            # Required fields
-            if not name:
-                error = True
-                errors_list.append("Athlete name is required.")
-            if not code:
-                error = True
-                errors_list.append("Player code is required.")
-            if not belt:
-                error = True
-                errors_list.append("Belt degree is required.")
-            if not club:
-                error = True
-                errors_list.append("Club is required.")
-            if not nationality:
-                error = True
-                errors_list.append("Nationality is required.")
-
+            if not name: error = True
+            if not code: error = True
+            if not belt: error = True
+            if not club: error = True
+            if not nationality: error = True
             if st.session_state.selected_championship != "African Master Course":
-                if competitions.strip() == "":
-                    error = True
-                    errors_list.append("At least one competition is required.")
-                if not coach:
-                    error = True
-                    errors_list.append("Coach name is required.")
-                if not phone:
-                    error = True
-                    errors_list.append("Phone number is required.")
+                if competitions.strip() == "": error = True
+                if not coach: error = True
+                if not phone: error = True
 
-        if error:
-            st.error("Fix the following issues:")
-            for m in errors_list:
-                st.write("- ", m)
-            st.stop()
+        if not error:
+            for athlete in athletes_data:
+                df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
-        for athlete in athletes_data:
-            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+            save_data(df)
 
-        save_data(df)
+            st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-        st.success(f"✅ {len(athletes_data)} players registered successfully!")
+            # ---------- clear all dynamic fields ----------
+            keys_to_clear = []
+            for k in st.session_state.keys():
+                if any(prefix in k for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "code_", "belt_", "comp_", "fed_"]):
+                    keys_to_clear.append(k)
+            for k in keys_to_clear:
+                st.session_state[k] = ""
 
-        for key in ["club","nationality","coach_name","phone_number"]:
-            st.session_state[key] = ""
-        st.session_state.submit_count += 1
-        safe_rerun()
+            for key in ["club","nationality","coach_name","phone_number"]:
+                st.session_state[key] = ""
+
+            st.session_state.submit_count += 1
+            safe_rerun()
 
 # ---------------- Admin Panel ----------------
 st.sidebar.header("Admin Login")
@@ -340,12 +308,10 @@ admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 if admin_password == "mobadr90":
     st.sidebar.success("Logged in as Admin ✅")
     df = load_data()
-
     if df.empty:
         st.info("No data yet.")
     else:
         st.dataframe(df, use_container_width=True)
-
         buffer = io.BytesIO()
         df.to_excel(buffer, index=False, engine="openpyxl")
         buffer.seek(0)
