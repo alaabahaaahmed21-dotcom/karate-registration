@@ -59,10 +59,16 @@ def load_data():
         return df[cols]
     return pd.DataFrame(columns=cols)
 
-# ---------------- Save Data ----------------
+# ---------------- Save Data (FIXED VERSION) ----------------
 def save_data(df):
+    # --- NEW: save only NEW rows to Google Sheets ---
+    new_rows = df.tail(len(athletes_data))
+
+    # Save CSV
     df.to_csv(DATA_FILE, index=False)
-    for _, row in df.iterrows():
+
+    # Send only newly added rows to Google Sheets
+    for _, row in new_rows.iterrows():
         ok = save_to_google_sheet({
             "Championship": row["Championship"],
             "Athlete Name": row["Athlete Name"],
@@ -77,6 +83,7 @@ def save_data(df):
             "Competitions": row["Competitions"],
             "Federation": row["Federation"]
         })
+
         if not ok:
             st.warning("⚠️ Failed to save some records to Google Sheets.")
 
@@ -138,12 +145,12 @@ if st.session_state.page == "registration":
         unsafe_allow_html=True
     )
 
-    # ------------------------------------------------------------
-    # Championship-specific fields
-    # ------------------------------------------------------------
     athletes_data = []
     submit_count = st.session_state.submit_count
 
+    # ------------------------------------------------------------
+    # African Master Course
+    # ------------------------------------------------------------
     if st.session_state.selected_championship == "African Master Course":
         course_type = st.selectbox("Choose course type:", ["Master", "General"])
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
@@ -185,8 +192,10 @@ if st.session_state.page == "registration":
                     "Championship": f"African Master Course - {course_type}"
                 })
 
+    # ------------------------------------------------------------
+    # Other Championships
+    # ------------------------------------------------------------
     else:
-        # باقي البطولات
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
         st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
         st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
@@ -295,12 +304,10 @@ if st.button("Submit All"):
     save_data(df)
     st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-    # ----- Clear all fields after submit -----
     for key in ["club","nationality","coach_name","phone_number"]:
         st.session_state[key] = ""
     st.session_state.submit_count += 1
 
-    # Clear player-specific inputs
     for i in range(num_players):
         key_suffix = f"_{st.session_state.submit_count}_{i}"
         for k in ["name","dob","sex","code","belt","comp","fed","nat","phone"]:
