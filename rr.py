@@ -204,7 +204,7 @@ if st.session_state.page == "registration":
                                     max_value=date.today(), key=f"dob{key_suffix}")
                 nationality = st.text_input(BILINGUAL_LABELS["Nationality"], key=f"nat{key_suffix}")
                 phone = st.text_input(BILINGUAL_LABELS["Phone Number"], key=f"phone{key_suffix}")
-                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male", "Female"], key=f"sex{key_suffix}")
+                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male\ذكر", "Female\انثى"], key=f"sex{key_suffix}")
                 code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{key_suffix}")
                 belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{key_suffix}")
 
