@@ -73,9 +73,10 @@ BILINGUAL_LABELS = {
     "Belt Degree": "Belt Degree / درجة الحزام",
     "Competitions": "Competitions / البطولات",
     "Federation": "Federation / الاتحاد",
+    "Federation": "Federation / الاتحاد",
     "Enter Club for all players": "Enter Club for all players / أدخل النادي لجميع اللاعبين",
     "Enter Nationality for all players": "Enter Nationality for all players / أدخل الجنسية لجميع اللاعبين", 
-    "Enter Coach Name for all players": "Enter Coach Name  / أدخل اسم المدرب "
+    "Enter Coach Name for all players": "Enter Coach Name  / أدخل اسم المدرب  ",
     "Enter Phone Number for the Coach": "Enter Phone Number for the Coach / أدخل رقم هاتف المدرب",
     "Number of players to add:": "Number of players to add: / عدد اللاعبين المراد إضافتهم",
     "Choose course type:": "Choose course type: / اختر نوع الدورة",
