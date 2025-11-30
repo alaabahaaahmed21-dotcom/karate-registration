@@ -8,6 +8,7 @@ import os
 from PIL import Image
 import hashlib
 import time
+import shutil
 
 # =====================================================
 # ---------------- Google Sheet API -------------------
@@ -36,27 +37,37 @@ def safe_rerun():
 # ---------------- Image Upload Function -------------
 # =====================================================
 def save_profile_image(uploaded_file, player_code):
-    """Save image locally and return relative path"""
-    if uploaded_file is not None:
-        # Create images directory if not exists
-        os.makedirs("player_images", exist_ok=True)
-        
-        # Generate unique filename
-        timestamp = str(int(time.time()))
-        file_hash = hashlib.md5(uploaded_file.getvalue()).hexdigest()[:8]
-        filename = f"{player_code}_{timestamp}_{file_hash}.jpg"
-        filepath = Path("player_images") / filename
-        
+    """Save image - Fixed for Streamlit Cloud"""
+    if uploaded_file is not None and player_code:
         try:
-            # Convert and save image
+            from pathlib import Path
+            
+            # حل مشكلة FileExistsError في Streamlit Cloud
+            folder_path = Path("player_images")
+            if folder_path.exists():
+                if folder_path.is_dir():
+                    shutil.rmtree(folder_path, ignore_errors=True)
+                else:
+                    folder_path.unlink(missing_ok=True)
+            
+            # إنشاء مجلد جديد
+            folder_path.mkdir(parents=True, exist_ok=True)
+            
+            # اسم فريد للصورة
+            timestamp = str(int(time.time()))
+            file_hash = hashlib.md5(uploaded_file.getvalue()).hexdigest()[:8]
+            filename = f"{player_code}_{timestamp}_{file_hash}.jpg"
+            filepath = folder_path / filename
+            
+            # حفظ الصورة مع تحسين
             image = Image.open(uploaded_file)
             image = image.convert('RGB')
-            image.thumbnail((300, 300))  # Resize for consistency
+            image.thumbnail((300, 300))
             image.save(filepath, "JPEG", quality=85)
             
-            # Return relative URL for web display
             return f"player_images/{filename}"
-        except:
+        except Exception as e:
+            st.error(f"❌ Image save error: {str(e)}")
             return ""
     return ""
 
@@ -107,7 +118,7 @@ BILINGUAL_COLS = {
     "Belt Degree": "Belt Degree / درجة الحزام",
     "Competitions": "Competitions / المسابقات",
     "Federation": "Federation / الاتحاد",
-    "Profile Image": "Profile Image / صورة البروفايل"  # ✅ Added
+    "Profile Image": "Profile Image / صورة البروفايل"
 }
 
 # =====================================================
@@ -233,6 +244,9 @@ if st.session_state.page == "registration":
     athletes_data = []
     submit_count = st.session_state.get("submit_count", 0)
 
+    # Dictionary لحفظ الصور لكل لاعب
+    uploaded_files = {}
+
     if st.session_state.selected_championship.startswith("African Master Course"):
 
         course_type = st.selectbox(BILINGUAL_LABELS["Choose course type:"], ["Master / ماستر ", "General / جنرال"])
@@ -269,7 +283,9 @@ if st.session_state.page == "registration":
                                                    type=['png', 'jpg', 'jpeg'], 
                                                    key=f"photo{suffix}")
                     
+                    # حفظ الصورة في dictionary
                     if uploaded_file is not None:
+                        uploaded_files[f"photo{suffix}"] = uploaded_file
                         st.image(uploaded_file, caption="Preview", width=120)
                     
                     sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
@@ -286,7 +302,7 @@ if st.session_state.page == "registration":
                     "Sex": sex,
                     "Player Code": code.strip(),
                     "Belt Degree": belt,
-                    "Profile Image": "",  # سيتم ملؤه لاحقاً
+                    "Profile Image": "", 
                     "Competitions": "", 
                     "Federation": "",
                     "Championship": f"African Master Course - {course_type}"
@@ -336,7 +352,9 @@ if st.session_state.page == "registration":
                                                    type=['png', 'jpg', 'jpeg'], 
                                                    key=f"photo{suffix}")
                     
+                    # حفظ الصورة في dictionary
                     if uploaded_file is not None:
+                        uploaded_files[f"photo{suffix}"] = uploaded_file
                         st.image(uploaded_file, caption="Preview", width=100)
                 
                 with col3:
@@ -373,7 +391,7 @@ if st.session_state.page == "registration":
                     "Sex": sex,
                     "Player Code": code.strip(),
                     "Belt Degree": belt,
-                    "Profile Image": "",  # سيتم ملؤه لاحقاً
+                    "Profile Image": "", 
                     "Competitions": ", ".join(competitions),
                     "Federation": federation,
                     "Championship": st.session_state.selected_championship
@@ -383,11 +401,16 @@ if st.session_state.page == "registration":
         df, _ = load_data()
         errors = []
 
-        # حفظ الصور أولاً
+        # حفظ الصور بشكل صحيح لكل لاعب ✅
         for idx, athlete in enumerate(athletes_data):
-            if 'uploaded_file' in locals() and uploaded_file is not None and athlete["Player Code"]:
-                image_path = save_profile_image(uploaded_file, athlete["Player Code"])
-                athletes_data[idx]["Profile Image"] = image_path
+            suffix = f"_{submit_count}_{idx}"
+            photo_key = f"photo{suffix}"
+            
+            if photo_key in uploaded_files and athlete["Player Code"]:
+                uploaded_file = uploaded_files[photo_key]
+                with st.spinner(f"📸 Saving image for {athlete['Athlete Name']}..."):
+                    image_path = save_profile_image(uploaded_file, athlete["Player Code"])
+                    athletes_data[idx]["Profile Image"] = image_path
 
         for athlete in athletes_data:
             name = athlete["Athlete Name"]
