@@ -11,22 +11,16 @@ import requests
 
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"
 
-def save_to_google_sheet(row):
-    try:
-        r = requests.post(GOOGLE_SHEET_API, json=row)
-        return r.status_code == 200
-    except:
-        return False
+def save_data(df):
+    df.to_csv(DATA_FILE, index=False)
 
-def safe_rerun():
-    """Handles rerun for Streamlit new/old versions."""
-    try:
-        if hasattr(st, "rerun"):
-            st.rerun()
-        elif hasattr(st, "experimental_rerun"):
-            st.experimental_rerun()
-    except:
-        pass
+    # Send only the last added row (one row)
+    if not df.empty:
+        last_row = df.iloc[-1].to_dict()
+        save_to_google_sheet(last_row)
+
+
+
 
 # =====================================================
 # ---------------- Logos ------------------------------
@@ -117,16 +111,6 @@ def load_data():
         return df, display_df
     return pd.DataFrame(columns=cols), pd.DataFrame(columns=list(BILINGUAL_COLS.values()))
 
-# =====================================================
-# ---------------- Save Data ---------------------------
-# =====================================================
-
-def save_data(df):
-    df.to_csv(DATA_FILE, index=False)
-    if not df.empty:
-        recent_rows = df.tail(100)
-        for _, row in recent_rows.iterrows():
-            save_to_google_sheet(row.to_dict())
 
 # =====================================================
 # ---------------- Initialize Session State ------------
