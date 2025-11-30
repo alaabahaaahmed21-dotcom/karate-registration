@@ -10,7 +10,7 @@ GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68Up
 
 def save_to_google_sheet(row):
     try:
-        r = requests.post(GOOGLE_SHEET_API, json=row)
+        r = requests.post(GOOGLE_SHEET_API, json=row, timeout=10)  # ✅ تصحيح 3: timeout
         return r.status_code == 200
     except:
         return False
@@ -59,11 +59,8 @@ def load_data():
         return df[cols]
     return pd.DataFrame(columns=cols)
 
-# ---------------- Save Data (FIXED VERSION) ----------------
-def save_data(df):
-    # --- NEW: save only NEW rows to Google Sheets ---
-    new_rows = df.tail(len(athletes_data))
-
+# ---------------- Save Data (✅ تصحيح 1: إضافة new_rows كمعامل) ----------------
+def save_data(df, new_rows):  # تمرير new_rows كمعامل
     # Save CSV
     df.to_csv(DATA_FILE, index=False)
 
@@ -83,7 +80,6 @@ def save_data(df):
             "Competitions": row["Competitions"],
             "Federation": row["Federation"]
         })
-
         if not ok:
             st.warning("⚠️ Failed to save some records to Google Sheets.")
 
@@ -258,7 +254,7 @@ if st.session_state.page == "registration":
                     "Championship": st.session_state.selected_championship
                 })
 
-# ---------------- Submit ----------------
+# ---------------- Submit (✅ تصحيح 2: إنشاء new_rows_df + مسح كامل) ----------------
 if st.button("Submit All"):
 
     df = load_data()
@@ -298,22 +294,27 @@ if st.button("Submit All"):
             st.write("- ", m)
         st.stop()
 
-    for athlete in athletes_data:
-        df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+    # ✅ تصحيح: إنشاء new_rows_df وإضافته مرة واحدة
+    new_rows_df = pd.DataFrame(athletes_data)
+    df = pd.concat([df, new_rows_df], ignore_index=True)
 
-    save_data(df)
+    # ✅ تصحيح: حفظ البيانات المُصحح
+    save_data(df, new_rows_df)
+    
     st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
+    # ✅ تصحيح: مسح كامل للحقول (بما في ذلك الحقول داخل expanders)
     for key in ["club","nationality","coach_name","phone_number"]:
         st.session_state[key] = ""
     st.session_state.submit_count += 1
-
+    
+    # مسح جميع widgets الخاصة باللاعبين
     for i in range(num_players):
-        key_suffix = f"_{st.session_state.submit_count}_{i}"
+        key_suffix = f"_{st.session_state.submit_count - 1}_{i}"  # السابق
         for k in ["name","dob","sex","code","belt","comp","fed","nat","phone"]:
             k_full = f"{k}{key_suffix}"
             if k_full in st.session_state:
-                st.session_state[k_full] = "" if k not in ["sex","dob"] else st.session_state[k_full]
+                st.session_state[k_full] = ""
 
     safe_rerun()
 
