@@ -10,7 +10,7 @@ GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68Up
 
 def save_to_google_sheet(row):
     try:
-        r = requests.post(GOOGLE_SHEET_API, json=row, timeout=10)  # ✅ تصحيح 3: timeout
+        r = requests.post(GOOGLE_SHEET_API, json=row, timeout=10)
         return r.status_code == 200
     except:
         return False
@@ -59,12 +59,9 @@ def load_data():
         return df[cols]
     return pd.DataFrame(columns=cols)
 
-# ---------------- Save Data (✅ تصحيح 1: إضافة new_rows كمعامل) ----------------
-def save_data(df, new_rows):  # تمرير new_rows كمعامل
-    # Save CSV
+# ---------------- Save Data ----------------
+def save_data(df, new_rows):
     df.to_csv(DATA_FILE, index=False)
-
-    # Send only newly added rows to Google Sheets
     for _, row in new_rows.iterrows():
         ok = save_to_google_sheet({
             "Championship": row["Championship"],
@@ -84,9 +81,36 @@ def save_data(df, new_rows):  # تمرير new_rows كمعامل
             st.warning("⚠️ Failed to save some records to Google Sheets.")
 
 # ---------------- Defaults ----------------
-for key in ["club", "nationality", "coach_name", "phone_number", "submit_count", "num_players"]:
+for key in ["club", "nationality", "coach_name", "phone_number", "submit_count", "num_players", "current_players_keys"]:
     if key not in st.session_state:
-        st.session_state[key] = "" if key not in ["submit_count","num_players"] else 0
+        st.session_state[key] = "" if key not in ["submit_count","num_players"] else 0 if key not in ["current_players_keys"] else []
+
+# ==================== CLEAR FORM FUNCTION ====================
+def clear_player_form(num_players):
+    """مسح آمن لنموذج اللاعبين"""
+    cleared_keys = []
+    
+    # مسح الحقول العامة
+    for key in ["club", "nationality", "coach_name", "phone_number"]:
+        if key in st.session_state:
+            st.session_state[key] = ""
+            cleared_keys.append(key)
+    
+    # مسح حقول اللاعبين
+    for i in range(num_players):
+        key_suffix = f"_{st.session_state.submit_count}_{i}"
+        for k in ["name", "dob", "sex", "code", "belt", "comp", "fed", "nat", "phone"]:
+            k_full = f"{k}{key_suffix}"
+            if k_full in st.session_state:
+                try:
+                    st.session_state[k_full] = ""
+                    cleared_keys.append(k_full)
+                except:
+                    pass  # تجاهل المفاتيح غير الصالحة
+    
+    st.session_state.current_players_keys = cleared_keys
+    st.session_state.submit_count += 1
+    st.session_state.num_players = 0
 
 # =====================================================
 # PAGE 1 — Select Championship
@@ -115,14 +139,12 @@ if st.session_state.page == "select_championship":
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
         safe_rerun()
-
     st.stop()
 
 # =====================================================
 # PAGE 2 — Registration
 # =====================================================
 if st.session_state.page == "registration":
-
     if st.button("⬅ Back to Championship Selection"):
         st.session_state.page = "select_championship"
         safe_rerun()
@@ -142,15 +164,15 @@ if st.session_state.page == "registration":
     )
 
     athletes_data = []
-    submit_count = st.session_state.submit_count
+    
+    # ✅ تصحيح: الحصول على num_players من session_state أو الافتراضي
+    current_num_players = st.session_state.get("num_players", 1)
 
-    # ------------------------------------------------------------
     # African Master Course
-    # ------------------------------------------------------------
     if st.session_state.selected_championship == "African Master Course":
         course_type = st.selectbox("Choose course type:", ["Master", "General"])
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
-        num_players = st.number_input("Number of players to add:", min_value=1, value=1)
+        num_players = st.number_input("Number of players to add:", min_value=1, value=current_num_players, key="num_players_input")
 
         belt_options = [
             "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
@@ -161,7 +183,7 @@ if st.session_state.page == "registration":
         ]
 
         for i in range(num_players):
-            key_suffix = f"_{submit_count}_{i}"
+            key_suffix = f"_{st.session_state.submit_count}_{i}"
             with st.expander(f"Player {i+1}"):
                 athlete_name = st.text_input("Athlete Name", key=f"name{key_suffix}")
                 dob = st.date_input("Date of Birth", min_value=date(1960,1,1),
@@ -184,19 +206,16 @@ if st.session_state.page == "registration":
                     "Belt Degree": belt,
                     "Competitions": "",
                     "Federation": "",
-                    "index": i,
                     "Championship": f"African Master Course - {course_type}"
                 })
 
-    # ------------------------------------------------------------
     # Other Championships
-    # ------------------------------------------------------------
     else:
         st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
         st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
         st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
         st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
-        num_players = st.number_input("Number of players to add:", min_value=1, value=1)
+        num_players = st.number_input("Number of players to add:", min_value=1, value=current_num_players, key="num_players_input_other")
 
         belt_options = [
             "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
@@ -207,7 +226,7 @@ if st.session_state.page == "registration":
         ]
 
         for i in range(num_players):
-            key_suffix = f"_{submit_count}_{i}"
+            key_suffix = f"_{st.session_state.submit_count}_{i}"
             with st.expander(f"Player {i+1}"):
                 athlete_name = st.text_input("Athlete Name", key=f"name{key_suffix}")
                 dob = st.date_input("Date of Birth", min_value=date(1960,1,1),
@@ -250,73 +269,58 @@ if st.session_state.page == "registration":
                     "Belt Degree": belt,
                     "Competitions": ", ".join(competitions),
                     "Federation": federation,
-                    "index": i,
                     "Championship": st.session_state.selected_championship
                 })
 
-# ---------------- Submit (✅ تصحيح 2: إنشاء new_rows_df + مسح كامل) ----------------
-if st.button("Submit All"):
+    st.session_state.num_players = num_players  # ✅ حفظ عدد اللاعبين
 
-    df = load_data()
-    error = False
-    errors_list = []
+    # ---------------- Submit ----------------
+    if st.button("Submit All"):
+        df = load_data()
+        error = False
+        errors_list = []
 
-    for athlete in athletes_data:
-        name = athlete["Athlete Name"]
-        code = athlete["Player Code"]
-        belt = athlete["Belt Degree"]
-        club = athlete["Club"]
-        nationality = athlete["Nationality"]
-        coach = athlete["Coach Name"]
-        phone = athlete["Phone Number"]
-        competitions = athlete["Competitions"]
-        championship = athlete["Championship"]
+        for athlete in athletes_data:
+            name = athlete["Athlete Name"]
+            code = athlete["Player Code"]
+            belt = athlete["Belt Degree"]
+            club = athlete["Club"]
+            nationality = athlete["Nationality"]
+            coach = athlete["Coach Name"]
+            phone = athlete["Phone Number"]
+            competitions = athlete["Competitions"]
+            championship = athlete["Championship"]
 
-        existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
-        if code and code in existing_codes:
-            errors_list.append(f"Player Code '{code}' already exists in {championship}!")
-            error = True
+            existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
+            if code and code in existing_codes:
+                errors_list.append(f"Player Code '{code}' already exists in {championship}!")
+                error = True
 
-        # Required fields
-        if not name: error = True; errors_list.append("Athlete name is required.")
-        if not code: error = True; errors_list.append("Player code is required.")
-        if not belt: error = True; errors_list.append("Belt degree is required.")
-        if not club: error = True; errors_list.append("Club is required.")
-        if not nationality: error = True; errors_list.append("Nationality is required.")
-        if st.session_state.selected_championship != "African Master Course":
-            if competitions.strip() == "": error=True; errors_list.append("At least one competition is required.")
-            if not coach: error=True; errors_list.append("Coach name is required.")
-        if not phone: error = True; errors_list.append("Phone number is required.")
+            if not name: error = True; errors_list.append("Athlete name is required.")
+            if not code: error = True; errors_list.append("Player code is required.")
+            if not belt: error = True; errors_list.append("Belt degree is required.")
+            if not club: error = True; errors_list.append("Club is required.")
+            if not nationality: error = True; errors_list.append("Nationality is required.")
+            if st.session_state.selected_championship != "African Master Course":
+                if competitions.strip() == "": error=True; errors_list.append("At least one competition is required.")
+                if not coach: error=True; errors_list.append("Coach name is required.")
+            if not phone: error = True; errors_list.append("Phone number is required.")
 
-    if error:
-        st.error("Fix the following issues:")
-        for m in errors_list:
-            st.write("- ", m)
-        st.stop()
+        if error:
+            st.error("Fix the following issues:")
+            for m in errors_list:
+                st.write("- ", m)
+            st.stop()
 
-    # ✅ تصحيح: إنشاء new_rows_df وإضافته مرة واحدة
-    new_rows_df = pd.DataFrame(athletes_data)
-    df = pd.concat([df, new_rows_df], ignore_index=True)
+        new_rows_df = pd.DataFrame(athletes_data)
+        df = pd.concat([df, new_rows_df], ignore_index=True)
+        save_data(df, new_rows_df)
 
-    # ✅ تصحيح: حفظ البيانات المُصحح
-    save_data(df, new_rows_df)
-    
-    st.success(f"✅ {len(athletes_data)} players registered successfully!")
-
-    # ✅ تصحيح: مسح كامل للحقول (بما في ذلك الحقول داخل expanders)
-    for key in ["club","nationality","coach_name","phone_number"]:
-        st.session_state[key] = ""
-    st.session_state.submit_count += 1
-    
-    # مسح جميع widgets الخاصة باللاعبين
-    for i in range(num_players):
-        key_suffix = f"_{st.session_state.submit_count - 1}_{i}"  # السابق
-        for k in ["name","dob","sex","code","belt","comp","fed","nat","phone"]:
-            k_full = f"{k}{key_suffix}"
-            if k_full in st.session_state:
-                st.session_state[k_full] = ""
-
-    safe_rerun()
+        st.success(f"✅ {len(athletes_data)} players registered successfully!")
+        
+        # ✅ استخدام الدالة الآمنة للمسح
+        clear_player_form(num_players)
+        safe_rerun()
 
 # ---------------- Admin Panel ----------------
 st.sidebar.header("Admin Login")
@@ -334,7 +338,7 @@ if admin_password == "mobadr90":
         name = st.session_state.get("selected_championship","athletes").replace(" ","_")
         st.download_button(
             "📥 Download Excel",
-            buffer,
+            buffer.getvalue(),
             file_name=f"{name}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
