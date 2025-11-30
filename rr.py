@@ -4,7 +4,13 @@ from datetime import date
 import io
 from pathlib import Path
 import requests
-import os
+import logging 
+
+# =====================================================
+# ---------------- Logger Fix -------------------------
+# =====================================================
+logging.basicConfig(level=logging.ERROR) 
+logger = logging.getLogger(__name__)      
 
 # =====================================================
 # ---------------- Google Sheet API -------------------
@@ -88,10 +94,10 @@ BILINGUAL_LABELS = {
     "Coach Name": "Coach Name / اسم المدرب",
     "Phone Number": "Phone Number / رقم الهاتف",
     "Date of Birth": "Date of Birth / تاريخ الميلاد",
-    "Sex": "Sex / الجنس",  # ✅ Fixed: Added missing key
+    "Sex": "Sex / الجنس",  
     "Player Code": "Player Code / كود اللاعب",
     "Belt Degree": "Belt Degree / درجة الحزام",
-    "Competitions": "Competitions / المسابقات",  # ✅ Fixed: Added missing key
+    "Competitions": "Competitions / المسابقات",  
     "Federation": "Federation / الاتحاد",
     "Enter Club for all players": "Enter Club for all players / أدخل النادي لجميع اللاعبين",
     "Enter Nationality for all players": "Enter Nationality for all players / أدخل الجنسية لجميع اللاعبين",
@@ -123,13 +129,19 @@ def load_data():
 # =====================================================
 
 def save_data(df):
-    """✅ Fixed: Simplified and more reliable"""
-    df.to_csv(DATA_FILE, index=False)
-    # Save last added rows to Google Sheets
-    if not df.empty:
-        recent_rows = df.tail(100)  # Reasonable batch size
-        for _, row in recent_rows.iterrows():
-            save_to_google_sheet(row.to_dict())
+
+    try:
+        df.to_csv(DATA_FILE, index=False)
+       
+        if not df.empty:
+            last_row = df.tail(1).iloc[0].to_dict()
+            save_to_google_sheet(last_row)
+        
+        return True
+    except Exception as e:
+        st.error(f"❌ خطأ في الحفظ: {str(e)}")
+        logger.error(f"خطأ الحفظ: {str(e)}")
+        return False
 
 # =====================================================
 # ---------------- Defaults ----------------------------
@@ -269,7 +281,7 @@ if st.session_state.page == "registration":
                 })
 
     # ------------------------------------------------------------
-    # Other Championships (✅ Fixed indentation & logic)
+    # Other Championships (✅ FIXED federation scope)
     # ------------------------------------------------------------
     else:
         st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
@@ -308,7 +320,7 @@ if st.session_state.page == "registration":
         ]
 
         # =========================
-        # Competitions Lists (✅ Moved inside loop where needed)
+        # Competitions Lists
         # =========================
         egyptian_competitions = [
             "Individual Kata / كاتا فردي",
@@ -332,16 +344,19 @@ if st.session_state.page == "registration":
 
         for i in range(num_players):
             suffix = f"_{submit_count}_{i}"
-
+            
+            # ✅ FIXED: federation معرف افتراضياً لكل لاعب
+            federation = ""
+            
             with st.expander(f"Player {i+1}"):
 
                 athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
                 dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
-                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")  # ✅ Fixed bilingual
+                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
                 code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{suffix}")
                 belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
 
-                # Federation logic (✅ Fixed scope issue)
+                # Federation logic (✅ الآن مضمون 100%)
                 federation_champs = [
                     "African Open Traditional Karate Championship / بطولة افريقيا المفتوحة للكاراتيه التقليدي",
                     "North Africa United Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
@@ -354,13 +369,11 @@ if st.session_state.page == "registration":
                         key=f"fed{suffix}"
                     )
                     
-                    # ✅ Fixed: Competitions logic now properly scoped
                     if "Egyptian" in federation:
                         comp_list = egyptian_competitions
                     else:
                         comp_list = united_general_competitions
                 else:
-                    federation = ""
                     comp_list = ["Individual Kata / كاتا فردي","Kata Team / كاتا جماعي","Individual Kumite / كوميتيه فردي","Fuko Go / فوكو جو",
                                 "Inbo Mix / إنبو مختلط","Inbo Male / إنبو ذكور","Inbo Female / إنبو إناث","Kumite Team / كوميتيه جماعي"]
 
@@ -439,34 +452,26 @@ if st.button("Submit All / إرسال الكل"):
     for athlete in athletes_data:
         df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
-    save_data(df)  # ✅ Fixed: Simplified call
+    save_data(df)
 
     st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-    # Reset fields (✅ Fixed: Proper reset with rerun)
+    # Reset fields
     st.session_state.submit_count = submit_count + 1
     for key in ["club", "nationality", "coach_name", "phone_number"]:
         st.session_state[key] = ""
     
-    safe_rerun()  # ✅ Ensures reset takes effect
+    safe_rerun()
 
 # =====================================================
 # ---------------- Admin Panel -------------------------
 # =====================================================
 
+st.sidebar.header("Admin Login")
+admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 
-
-
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
-
-admin_password_input = st.sidebar.text_input("Enter Admin Password", type="password")
-
-if admin_password_input == ADMIN_PASSWORD and ADMIN_PASSWORD != "":
+if admin_password == "mobadr90":
     st.sidebar.success("Logged in as Admin")
-else:
-    if admin_password_input:
-        st.sidebar.warning("Incorrect password or not set in environment.")
-
 
     df, display_df = load_data()
 
