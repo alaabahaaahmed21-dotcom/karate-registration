@@ -98,6 +98,12 @@ BILINGUAL_LABELS = {
 # =====================================================
 # ---------------- Load Data ---------------------------
 # =====================================================
+def save_to_google_sheet(row):
+    try:
+        r = requests.post(GOOGLE_SHEET_API, json=row)
+        return r.status_code == 200
+    except:
+        return False
 
 def load_data():
     cols = list(BILINGUAL_COLS.keys())
