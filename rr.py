@@ -177,7 +177,11 @@ def save_data(df):
 # ---------------- Defaults ----------------------------
 # =====================================================
 
-for key in ["club", "nationality", "coach_name", "phone_number", "submit_count"]:
+# إصلاح مشكلة session_state.submit_count ✅
+if "submit_count" not in st.session_state:
+    st.session_state.submit_count = 0
+
+for key in ["club", "nationality", "coach_name", "phone_number"]:
     if key not in st.session_state:
         st.session_state[key] = ""
 
@@ -242,7 +246,7 @@ if st.session_state.page == "registration":
     )
 
     athletes_data = []
-    submit_count = st.session_state.get("submit_count", 0)
+    submit_count = st.session_state.submit_count  # ✅ استخدام session_state مباشرة
 
     # Dictionary لحفظ الصور لكل لاعب
     uploaded_files = {}
@@ -451,7 +455,8 @@ if st.session_state.page == "registration":
 
         st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-        st.session_state.submit_count = submit_count + 1
+        # ✅ إصلاح مشكلة TypeError في session_state.submit_count
+        st.session_state.submit_count += 1
         for key in ["club", "nationality", "coach_name", "phone_number"]:
             st.session_state[key] = ""
         
