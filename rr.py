@@ -456,7 +456,7 @@ if st.session_state.page == "registration":
         st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
         # ✅ إصلاح مشكلة TypeError في session_state.submit_count
-        st.session_state.submit_count += 1
+        st.session_state.submit_count = st.session_state.submit_count + 1
         for key in ["club", "nationality", "coach_name", "phone_number"]:
             st.session_state[key] = ""
         
