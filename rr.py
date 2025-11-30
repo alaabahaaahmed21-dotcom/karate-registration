@@ -19,9 +19,6 @@ def save_data(df):
         last_row = df.iloc[-1].to_dict()
         save_to_google_sheet(last_row)
 
-
-
-
 # =====================================================
 # ---------------- Logos ------------------------------
 # =====================================================
@@ -117,7 +114,6 @@ def load_data():
         return df, display_df
     return pd.DataFrame(columns=cols), pd.DataFrame(columns=list(BILINGUAL_COLS.values()))
 
-
 # =====================================================
 # ---------------- Initialize Session State ------------
 # =====================================================
@@ -163,7 +159,7 @@ if st.session_state.page == "select_championship":
     if st.button("Next/التالي ➜"):
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
-        safe_rerun()
+        st.rerun()
 
     st.stop()
 
@@ -175,7 +171,7 @@ if st.session_state.page == "registration":
 
     if st.button("⬅ Back / رجوع"):
         st.session_state.page = "select_championship"
-        safe_rerun()
+        st.rerun()
 
     st.markdown(f"""
     <div class="image-row">
@@ -323,7 +319,7 @@ if st.session_state.page == "registration":
                 })
 
     # =====================================================
-    # ---------------- Submit Button - ✅ Fixed 100% --------
+    # ---------------- Submit Button -  --------
     # =====================================================
     if st.button("Submit All / إرسال الكل") and athletes_data:
 
@@ -367,14 +363,14 @@ if st.session_state.page == "registration":
             save_data(df)
             st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-            # ✅ Fixed: مباشرة من session_state بدون متغير وسيط
+           
             st.session_state.submit_count += 1
             st.session_state.club = ""
             st.session_state.nationality = ""
             st.session_state.coach_name = ""
             st.session_state.phone_number = ""
             
-            safe_rerun()
+            st.rerun()
 
 # =====================================================
 # ---------------- Admin Panel -------------------------
