@@ -955,21 +955,18 @@ if admin_password == "mobadr90":
 
         st.dataframe(display_df, use_container_width=True, column_config=column_config)
 
-        try:
-            buffer = io.BytesIO()
-            df.to_excel(buffer, index=False, engine="openpyxl")
-            buffer.seek(0)
+        buffer = io.BytesIO()
+        df.to_excel(buffer, index=False, engine="openpyxl")
+        buffer.seek(0)
 
-            filename = st.session_state.get("selected_championship", "athletes").replace(" ", "_")
+        filename = st.session_state.get("selected_championship", "athletes").replace(" ", "_")
 
-            st.download_button(
-                "📥 Download Excel",
-                buffer.getvalue(),
-                file_name=f"{filename}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        except ImportError:
-            st.warning("📦 Install openpyxl for Excel export: `pip install openpyxl`")
+        st.download_button(
+            "📥 Download Excel",
+            buffer,
+            file_name=f"{filename}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 else:
     st.sidebar.warning("Not logged in.")
