@@ -183,7 +183,7 @@ if st.session_state.page == "registration":
     """, unsafe_allow_html=True)
 
     st.markdown(
-        f"<h3>🏆 Registration Form: {st.session_state.selected_championship}</h3>",
+        f"<h3>🏆 : {st.session_state.selected_championship}</h3>",
         unsafe_allow_html=True
     )
 
