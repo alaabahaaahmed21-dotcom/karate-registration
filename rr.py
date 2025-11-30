@@ -4,6 +4,10 @@ from datetime import date
 import io
 from pathlib import Path
 import requests
+import os
+from PIL import Image
+import hashlib
+import time
 
 # =====================================================
 # ---------------- Google Sheet API -------------------
@@ -29,6 +33,34 @@ def safe_rerun():
         pass
 
 # =====================================================
+# ---------------- Image Upload Function -------------
+# =====================================================
+def save_profile_image(uploaded_file, player_code):
+    """Save image locally and return relative path"""
+    if uploaded_file is not None:
+        # Create images directory if not exists
+        os.makedirs("player_images", exist_ok=True)
+        
+        # Generate unique filename
+        timestamp = str(int(time.time()))
+        file_hash = hashlib.md5(uploaded_file.getvalue()).hexdigest()[:8]
+        filename = f"{player_code}_{timestamp}_{file_hash}.jpg"
+        filepath = Path("player_images") / filename
+        
+        try:
+            # Convert and save image
+            image = Image.open(uploaded_file)
+            image = image.convert('RGB')
+            image.thumbnail((300, 300))  # Resize for consistency
+            image.save(filepath, "JPEG", quality=85)
+            
+            # Return relative URL for web display
+            return f"player_images/{filename}"
+        except:
+            return ""
+    return ""
+
+# =====================================================
 # ---------------- Logos ------------------------------
 # =====================================================
 
@@ -45,6 +77,7 @@ st.markdown("""
 <style>
 .image-row { display: flex; justify-content: center; gap: 10px; flex-wrap: nowrap; }
 .image-row img { width: 80px; height: auto; }
+.profile-preview { max-width: 120px; max-height: 120px; border-radius: 10px; border: 2px solid #ddd; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -73,11 +106,12 @@ BILINGUAL_COLS = {
     "Player Code": "Player Code / كود اللاعب",
     "Belt Degree": "Belt Degree / درجة الحزام",
     "Competitions": "Competitions / المسابقات",
-    "Federation": "Federation / الاتحاد"
+    "Federation": "Federation / الاتحاد",
+    "Profile Image": "Profile Image / صورة البروفايل"  # ✅ Added
 }
 
 # =====================================================
-# ---------------- Form Labels (Fixed) -----------------
+# ---------------- Form Labels -------------------------
 # =====================================================
 
 BILINGUAL_LABELS = {
@@ -87,10 +121,10 @@ BILINGUAL_LABELS = {
     "Coach Name": "Coach Name / اسم المدرب",
     "Phone Number": "Phone Number / رقم الهاتف",
     "Date of Birth": "Date of Birth / تاريخ الميلاد",
-    "Sex": "Sex / الجنس",  # ✅ Fixed: Added missing key
+    "Sex": "Sex / الجنس",
     "Player Code": "Player Code / كود اللاعب",
     "Belt Degree": "Belt Degree / درجة الحزام",
-    "Competitions": "Competitions / المسابقات",  # ✅ Fixed: Added missing key
+    "Competitions": "Competitions / المسابقات",
     "Federation": "Federation / الاتحاد",
     "Enter Club for all players": "Enter Club for all players / أدخل النادي لجميع اللاعبين",
     "Enter Nationality for all players": "Enter Nationality for all players / أدخل الجنسية لجميع اللاعبين",
@@ -118,15 +152,13 @@ def load_data():
     return pd.DataFrame(columns=cols), pd.DataFrame(columns=list(BILINGUAL_COLS.values()))
 
 # =====================================================
-# ---------------- Save Data (Fixed) ------------------
+# ---------------- Save Data ---------------------------
 # =====================================================
 
 def save_data(df):
-    """✅ Fixed: Simplified and more reliable"""
     df.to_csv(DATA_FILE, index=False)
-    # Save last added rows to Google Sheets
     if not df.empty:
-        recent_rows = df.tail(100)  # Reasonable batch size
+        recent_rows = df.tail(100)
         for _, row in recent_rows.iterrows():
             save_to_google_sheet(row.to_dict())
 
@@ -163,7 +195,7 @@ if st.session_state.page == "select_championship":
         [
             "African Master Course / الماستر كورس الافريقى",
             "African Open Traditional Karate Championship / بطولة افريقيا المفتوحة للكاراتيه التقليدي",
-            "North Africa united Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
+            "North Africa Unitied Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
         ]
     )
 
@@ -180,12 +212,10 @@ if st.session_state.page == "select_championship":
 
 if st.session_state.page == "registration":
 
-    # Back button
     if st.button("⬅ Back / رجوع"):
         st.session_state.page = "select_championship"
         safe_rerun()
 
-    # Logos
     st.markdown(f"""
     <div class="image-row">
         <img src="{img1}">
@@ -203,9 +233,6 @@ if st.session_state.page == "registration":
     athletes_data = []
     submit_count = st.session_state.get("submit_count", 0)
 
-    # ------------------------------------------------------------
-    # African Master Course
-    # ------------------------------------------------------------
     if st.session_state.selected_championship.startswith("African Master Course"):
 
         course_type = st.selectbox(BILINGUAL_LABELS["Choose course type:"], ["Master / ماستر ", "General / جنرال"])
@@ -213,44 +240,41 @@ if st.session_state.page == "registration":
         num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
 
         belt_options = [
-            "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين",
-            "Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
-            "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين",
-            "Kyu Junior orange green 7 / برتقالي أخضر 7 كيو ناشئين",
-            "Kyu Junior green 6 / أخضر 6 كيو ناشئين",
-            "Kyu Junior green blue 5 / أخضر أزرق 5 كيو ناشئين",
-            "Kyu Junior blue 4 / أزرق 4 كيو ناشئين",
-            "Kyu Junior blue 3 / أزرق 3 كيو ناشئين",
-            "Kyu Junior brown 2 / بني 2 كيو ناشئين",
-            "Kyu Junior brown 1 / بني 1 كيو ناشئين",
-            "Kyu Senior yellow 7 / أصفر 7 كيو كبار",
-            "Kyu Senior yellow 6 / أصفر 6 كيو كبار",
-            "Kyu Senior orange 5 / برتقالي 5 كيو كبار",
-            "Kyu Senior orange 4 / برتقالي 4 كيو كبار",
-            "Kyu Senior green 3 / أخضر 3 كيو كبار",
-            "Kyu Senior blue 2 / أزرق 2 كيو كبار",
-            "Kyu Senior brown 1 / بني 1 كيو كبار",
-            "Dan 1 / دان 1",
-            "Dan 2 / دان 2",
-            "Dan 3 / دان 3",
-            "Dan 4 / دان 4",
-            "Dan 5 / دان 5",
-            "Dan 6 / دان 6",
-            "Dan 7 / دان 7",
-            "Dan 8 / دان 8"
+            "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين","Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
+            "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين","Kyu Junior orange green 7 / برتقالي أخضر 7 كيو ناشئين",
+            "Kyu Junior green 6 / أخضر 6 كيو ناشئين","Kyu Junior green blue 5 / أخضر أزرق 5 كيو ناشئين",
+            "Kyu Junior blue 4 / أزرق 4 كيو ناشئين","Kyu Junior blue 3 / أزرق 3 كيو ناشئين",
+            "Kyu Junior brown 2 / بني 2 كيو ناشئين","Kyu Junior brown 1 / بني 1 كيو ناشئين",
+            "Kyu Senior yellow 7 / أصفر 7 كيو كبار","Kyu Senior yellow 6 / أصفر 6 كيو كبار",
+            "Kyu Senior orange 5 / برتقالي 5 كيو كبار","Kyu Senior orange 4 / برتقالي 4 كيو كبار",
+            "Kyu Senior green 3 / أخضر 3 كيو كبار","Kyu Senior blue 2 / أزرق 2 كيو كبار",
+            "Kyu Senior brown 1 / بني 1 كيو كبار","Dan 1 / دان 1","Dan 2 / دان 2","Dan 3 / دان 3",
+            "Dan 4 / دان 4","Dan 5 / دان 5","Dan 6 / دان 6","Dan 7 / دان 7","Dan 8 / دان 8"
         ]
 
         for i in range(num_players):
             suffix = f"_{submit_count}_{i}"
 
             with st.expander(f"Player {i+1}"):
-                athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
-                dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
-                nationality = st.text_input(BILINGUAL_LABELS["Nationality"], key=f"nat{suffix}")
-                phone = st.text_input(BILINGUAL_LABELS["Phone Number"], key=f"phone{suffix}")
-                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
-                code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{suffix}")
-                belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
+                    dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
+                    nationality = st.text_input(BILINGUAL_LABELS["Nationality"], key=f"nat{suffix}")
+                    phone = st.text_input(BILINGUAL_LABELS["Phone Number"], key=f"phone{suffix}")
+                
+                with col2:
+                    uploaded_file = st.file_uploader("📸 Profile Picture / صورة البروفايل", 
+                                                   type=['png', 'jpg', 'jpeg'], 
+                                                   key=f"photo{suffix}")
+                    
+                    if uploaded_file is not None:
+                        st.image(uploaded_file, caption="Preview", width=120)
+                    
+                    sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
+                    code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{suffix}")
+                    belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
 
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
@@ -262,14 +286,12 @@ if st.session_state.page == "registration":
                     "Sex": sex,
                     "Player Code": code.strip(),
                     "Belt Degree": belt,
+                    "Profile Image": "",  # سيتم ملؤه لاحقاً
                     "Competitions": "", 
                     "Federation": "",
                     "Championship": f"African Master Course - {course_type}"
                 })
 
-    # ------------------------------------------------------------
-    # Other Championships (✅ Fixed indentation & logic)
-    # ------------------------------------------------------------
     else:
         st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
         st.session_state.nationality = st.text_input(BILINGUAL_LABELS["Enter Nationality for all players"], value=st.session_state.nationality)
@@ -279,71 +301,52 @@ if st.session_state.page == "registration":
         num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
 
         belt_options = [
-            "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين",
-            "Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
-            "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين",
-            "Kyu Junior orange green 7 / برتقالي أخضر 7 كيو ناشئين",
-            "Kyu Junior green 6 / أخضر 6 كيو ناشئين",
-            "Kyu Junior green blue 5 / أخضر أزرق 5 كيو ناشئين",
-            "Kyu Junior blue 4 / أزرق 4 كيو ناشئين",
-            "Kyu Junior blue 3 / أزرق 3 كيو ناشئين",
-            "Kyu Junior brown 2 / بني 2 كيو ناشئين",
-            "Kyu Junior brown 1 / بني 1 كيو ناشئين",
-            "Kyu Senior yellow 7 / أصفر 7 كيو كبار",
-            "Kyu Senior yellow 6 / أصفر 6 كيو كبار",
-            "Kyu Senior orange 5 / برتقالي 5 كيو كبار",
-            "Kyu Senior orange 4 / برتقالي 4 كيو كبار",
-            "Kyu Senior green 3 / أخضر 3 كيو كبار",
-            "Kyu Senior blue 2 / أزرق 2 كيو كبار",
-            "Kyu Senior brown 1 / بني 1 كيو كبار",
-            "Dan 1 / دان 1",
-            "Dan 2 / دان 2",
-            "Dan 3 / دان 3",
-            "Dan 4 / دان 4",
-            "Dan 5 / دان 5",
-            "Dan 6 / دان 6",
-            "Dan 7 / دان 7",
-            "Dan 8 / دان 8"
+            "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين","Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
+            "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين","Kyu Junior orange green 7 / برتقالي أخضر 7 كيو ناشئين",
+            "Kyu Junior green 6 / أخضر 6 كيو ناشئين","Kyu Junior green blue 5 / أخضر أزرق 5 كيو ناشئين",
+            "Kyu Junior blue 4 / أزرق 4 كيو ناشئين","Kyu Junior blue 3 / أزرق 3 كيو ناشئين",
+            "Kyu Junior brown 2 / بني 2 كيو ناشئين","Kyu Junior brown 1 / بني 1 كيو ناشئين",
+            "Kyu Senior yellow 7 / أصفر 7 كيو كبار","Kyu Senior yellow 6 / أصفر 6 كيو كبار",
+            "Kyu Senior orange 5 / برتقالي 5 كيو كبار","Kyu Senior orange 4 / برتقالي 4 كيو كبار",
+            "Kyu Senior green 3 / أخضر 3 كيو كبار","Kyu Senior blue 2 / أزرق 2 كيو كبار",
+            "Kyu Senior brown 1 / بني 1 كيو كبار","Dan 1 / دان 1","Dan 2 / دان 2","Dan 3 / دان 3",
+            "Dan 4 / دان 4","Dan 5 / دان 5","Dan 6 / دان 6","Dan 7 / دان 7","Dan 8 / دان 8"
         ]
 
-        # =========================
-        # Competitions Lists (✅ Moved inside loop where needed)
-        # =========================
-        egyptian_competitions = [
-            "Individual Kata / كاتا فردي",
-            "Kata Team / كاتا جماعي",
-            "Individual Kumite / كوميتيه فردي",
-            "Fuko Go / فوكو جو",
-            "Inbo Mix / إنبو مختلط",
-            "Inbo Male / إنبو ذكور",
-            "Inbo Female / إنبو إناث",
-            "Kumite Team /كوميتيه جماعي "
-        ]
+        egyptian_competitions = ["Individual Kata / كاتا فردي","Kata Team / كاتا جماعي","Individual Kumite / كوميتيه فردي",
+                                "Fuko Go / فوكو جو","Inbo Mix / إنبو مختلط","Inbo Male / إنبو ذكور",
+                                "Inbo Female / إنبو إناث","Kumite Team /كوميتيه جماعي "]
 
-        united_general_competitions = [
-            "Individual Kata / كاتا فردي",
-            "Kata Team / كاتا جماعي",
-            "Kumite Ibon / كوميتيه إيبون",
-            "Kumite Nihon / كوميتيه نيهون",
-            "Kumite Sanbon / كوميتيه سانبون",
-            "Kumite Rote Shine / كوميتيه روت شاين"
-        ]
+        united_general_competitions = ["Individual Kata / كاتا فردي","Kata Team / كاتا جماعي",
+                                     "Kumite Ibon / كوميتيه إيبون","Kumite Nihon / كوميتيه نيهون",
+                                     "Kumite Sanbon / كوميتيه سانبون","Kumite Rote Shine / كوميتيه روت شاين"]
 
         for i in range(num_players):
             suffix = f"_{submit_count}_{i}"
 
             with st.expander(f"Player {i+1}"):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
+                    dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
+                
+                with col2:
+                    uploaded_file = st.file_uploader("📸 Profile Picture / صورة البروفايل", 
+                                                   type=['png', 'jpg', 'jpeg'], 
+                                                   key=f"photo{suffix}")
+                    
+                    if uploaded_file is not None:
+                        st.image(uploaded_file, caption="Preview", width=100)
+                
+                with col3:
+                    sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
+                    code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{suffix}")
+                    belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
 
-                athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
-                dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
-                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")  # ✅ Fixed bilingual
-                code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{suffix}")
-                belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
-
-                # Federation logic (✅ Fixed scope issue)
                 federation_champs = [
                     "African Open Traditional Karate Championship / بطولة افريقيا المفتوحة للكاراتيه التقليدي",
-                    "North Africa united Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
+                    "North Africa Unitied Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
                 ]
 
                 if st.session_state.selected_championship in federation_champs:
@@ -352,12 +355,7 @@ if st.session_state.page == "registration":
                         ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", "United General Committee / لجنة الجنرال الموحد"],
                         key=f"fed{suffix}"
                     )
-                    
-                    # ✅ Fixed: Competitions logic now properly scoped
-                    if "Egyptian" in federation:
-                        comp_list = egyptian_competitions
-                    else:
-                        comp_list = united_general_competitions
+                    comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
                 else:
                     federation = ""
                     comp_list = ["Individual Kata / كاتا فردي","Kata Team / كاتا جماعي","Individual Kumite / كوميتيه فردي","Fuko Go / فوكو جو",
@@ -375,79 +373,66 @@ if st.session_state.page == "registration":
                     "Sex": sex,
                     "Player Code": code.strip(),
                     "Belt Degree": belt,
+                    "Profile Image": "",  # سيتم ملؤه لاحقاً
                     "Competitions": ", ".join(competitions),
                     "Federation": federation,
                     "Championship": st.session_state.selected_championship
                 })
 
-# =====================================================
-# ---------------- Submit Button -----------------------
-# =====================================================
+    if st.button("Submit All / إرسال الكل"):
+        df, _ = load_data()
+        errors = []
 
-if st.button("Submit All / إرسال الكل"):
+        # حفظ الصور أولاً
+        for idx, athlete in enumerate(athletes_data):
+            if 'uploaded_file' in locals() and uploaded_file is not None and athlete["Player Code"]:
+                image_path = save_profile_image(uploaded_file, athlete["Player Code"])
+                athletes_data[idx]["Profile Image"] = image_path
 
-    df, _ = load_data()
-    errors = []
+        for athlete in athletes_data:
+            name = athlete["Athlete Name"]
+            code = athlete["Player Code"]
+            belt = athlete["Belt Degree"]
+            club = athlete["Club"]
+            nationality = athlete["Nationality"]
+            coach = athlete["Coach Name"]
+            phone = athlete["Phone Number"]
+            competitions = athlete["Competitions"]
+            championship = athlete["Championship"]
 
-    for athlete in athletes_data:
+            existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
+            if code and code in existing_codes:
+                errors.append(f"❌ Player Code '{code}' already exists!")
+            
+            if not name: errors.append("❌ Athlete name is required.")
+            if not code: errors.append("❌ Player code is required.")
+            if not belt: errors.append("❌ Belt degree is required.")
+            if not club: errors.append("❌ Club is required.")
+            if not nationality: errors.append("❌ Nationality is required.")
+            if not phone: errors.append("❌ Phone number is required.")
+            if not championship.startswith("African Master Course") and not competitions:
+                errors.append("❌ At least one competition is required.")
+            if not championship.startswith("African Master Course") and not coach:
+                errors.append("❌ Coach name is required.")
 
-        # Basic fields
-        name = athlete["Athlete Name"]
-        code = athlete["Player Code"]
-        belt = athlete["Belt Degree"]
-        club = athlete["Club"]
-        nationality = athlete["Nationality"]
-        coach = athlete["Coach Name"]
-        phone = athlete["Phone Number"]
-        competitions = athlete["Competitions"]
-        championship = athlete["Championship"]
+        if errors:
+            st.error("Fix the following errors:")
+            for e in errors:
+                st.write("-", e)
+            st.stop()
 
-        # Duplicate code check
-        existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
-        if code and code in existing_codes:
-            errors.append(f"❌ Player Code '{code}' already exists!")
+        for athlete in athletes_data:
+            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+
+        save_data(df)
+
+        st.success(f"✅ {len(athletes_data)} players registered successfully!")
+
+        st.session_state.submit_count = submit_count + 1
+        for key in ["club", "nationality", "coach_name", "phone_number"]:
+            st.session_state[key] = ""
         
-        # Required fields
-        if not name:
-            errors.append("❌ Athlete name is required.")
-        if not code:
-            errors.append("❌ Player code is required.")
-        if not belt:
-            errors.append("❌ Belt degree is required.")
-        if not club:
-            errors.append("❌ Club is required.")
-        if not nationality:
-            errors.append("❌ Nationality is required.")
-        if not phone:
-            errors.append("❌ Phone number is required.")
-
-        # Competitions only required outside master
-        if not championship.startswith("African Master Course") and not competitions:
-            errors.append("❌ At least one competition is required.")
-        if not championship.startswith("African Master Course") and not coach:
-            errors.append("❌ Coach name is required.")
-
-    # Show errors
-    if errors:
-        st.error("Fix the following errors:")
-        for e in errors:
-            st.write("-", e)
-        st.stop()
-
-    # Append new data
-    for athlete in athletes_data:
-        df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
-
-    save_data(df)  # ✅ Fixed: Simplified call
-
-    st.success(f"✅ {len(athletes_data)} players registered successfully!")
-
-    # Reset fields (✅ Fixed: Proper reset with rerun)
-    st.session_state.submit_count = submit_count + 1
-    for key in ["club", "nationality", "coach_name", "phone_number"]:
-        st.session_state[key] = ""
-    
-    safe_rerun()  # ✅ Ensures reset takes effect
+        safe_rerun()
 
 # =====================================================
 # ---------------- Admin Panel -------------------------
@@ -462,13 +447,17 @@ if admin_password == "mobadr90":
     df, display_df = load_data()
 
     if not df.empty:
-
-        # Correct: match the *renamed* bilingual column names
         column_config = {
             bi_col: st.column_config.TextColumn(bi_col)
             for eng_col, bi_col in BILINGUAL_COLS.items()
-            if bi_col in display_df.columns
+            if bi_col in display_df.columns and eng_col != "Profile Image"
         }
+        
+        # Image column configuration
+        if "Profile Image / صورة البروفايل" in display_df.columns:
+            column_config["Profile Image / صورة البروفايل"] = st.column_config.ImageColumn(
+                "Profile Image / صورة البروفايل", width="small"
+            )
 
         st.dataframe(display_df, use_container_width=True, column_config=column_config)
 
@@ -476,9 +465,7 @@ if admin_password == "mobadr90":
             buffer = io.BytesIO()
             df.to_excel(buffer, index=False, engine="openpyxl")
             buffer.seek(0)
-
             filename = st.session_state.get("selected_championship", "athletes").replace(" ", "_")
-
             st.download_button(
                 "📥 Download Excel",
                 buffer.getvalue(),
