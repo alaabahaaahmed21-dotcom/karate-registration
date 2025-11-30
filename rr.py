@@ -44,30 +44,63 @@ if "page" not in st.session_state:
 
 DATA_FILE = Path("athletes_data.csv")
 
+# ---------------- Bilingual Column Headers ----------------
+BILINGUAL_COLS = {
+    "Championship": "البطولة / Championship",
+    "Athlete Name": "اسم اللاعب / Athlete Name", 
+    "Club": "النادي / Club",
+    "Nationality": "الجنسية / Nationality",
+    "Coach Name": "اسم المدرب / Coach Name",
+    "Phone Number": "رقم الهاتف / Phone Number",
+    "Date of Birth": "تاريخ الميلاد / Date of Birth",
+    "Sex": "الجنس / Sex",
+    "Player Code": "كود اللاعب / Player Code",
+    "Belt Degree": "درجة الحزام / Belt Degree",
+    "Competitions": "البطولات / Competitions",
+    "Federation": "الاتحاد / Federation"
+}
+
+# Bilingual Form Labels
+BILINGUAL_LABELS = {
+    "Athlete Name": "اسم اللاعب / Athlete Name",
+    "Club": "النادي / Club", 
+    "Nationality": "الجنسية / Nationality",
+    "Coach Name": "اسم المدرب / Coach Name",
+    "Phone Number": "رقم الهاتف / Phone Number",
+    "Date of Birth": "تاريخ الميلاد / Date of Birth",
+    "Sex": "الجنس / Sex",
+    "Player Code": "كود اللاعب / Player Code",
+    "Belt Degree": "درجة الحزام / Belt Degree",
+    "Competitions": "البطولات / Competitions",
+    "Federation": "الاتحاد / Federation",
+    "Enter Club for all players": "أدخل النادي لجميع اللاعبين / Enter Club for all players",
+    "Enter Nationality for all players": "أدخل الجنسية لجميع اللاعبين / Enter Nationality for all players", 
+    "Enter Coach Name for all players": "أدخل اسم المدرب لجميع اللاعبين / Enter Coach Name for all players",
+    "Enter Phone Number for the Coach": "أدخل رقم هاتف المدرب / Enter Phone Number for the Coach",
+    "Number of players to add:": "عدد اللاعبين المراد إضافتهم / Number of players to add:",
+    "Choose course type:": "اختر نوع الدورة / Choose course type:",
+    "Select Federation": "اختر الاتحاد / Select Federation"
+}
+
 # ---------------- Load Data ----------------
 def load_data():
-    cols = [
-        "Championship", "Athlete Name", "Club", "Nationality", "Coach Name",
-        "Phone Number", "Date of Birth", "Sex", "Player Code",
-        "Belt Degree", "Competitions", "Federation"
-    ]
+    cols = list(BILINGUAL_COLS.keys())
     if DATA_FILE.exists():
         df = pd.read_csv(DATA_FILE)
         for c in cols:
             if c not in df.columns:
                 df[c] = ""
-        return df[cols]
-    return pd.DataFrame(columns=cols)
+        # Rename columns for display
+        display_df = df.copy()
+        display_df.rename(columns=BILINGUAL_COLS, inplace=True)
+        return df, display_df
+    return pd.DataFrame(columns=cols), pd.DataFrame(columns=list(BILINGUAL_COLS.values()))
 
-# ---------------- Save Data (FIXED VERSION) ----------------
+# ---------------- Save Data ----------------
 def save_data(df):
-    # --- NEW: save only NEW rows to Google Sheets ---
     new_rows = df.tail(len(athletes_data))
-
-    # Save CSV
     df.to_csv(DATA_FILE, index=False)
-
-    # Send only newly added rows to Google Sheets
+    
     for _, row in new_rows.iterrows():
         ok = save_to_google_sheet({
             "Championship": row["Championship"],
@@ -83,7 +116,6 @@ def save_data(df):
             "Competitions": row["Competitions"],
             "Federation": row["Federation"]
         })
-
         if not ok:
             st.warning("⚠️ Failed to save some records to Google Sheets.")
 
@@ -105,9 +137,9 @@ if st.session_state.page == "select_championship":
     </div>
     """, unsafe_allow_html=True)
 
-    st.title("🏆 Select Championship")
+    st.title("🏆 اختر البطولة / Select Championship")
     championship = st.selectbox(
-        "Please select the championship you want to register for:",
+        "يرجى اختيار البطولة المراد التسجيل فيها / Please select the championship:",
         [
             "African Master Course",
             "African Open Traditional Karate Championship",
@@ -115,7 +147,7 @@ if st.session_state.page == "select_championship":
         ]
     )
 
-    if st.button("Next ➜"):
+    if st.button("التالي ➜ / Next ➜"):
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
         safe_rerun()
@@ -126,8 +158,7 @@ if st.session_state.page == "select_championship":
 # PAGE 2 — Registration
 # =====================================================
 if st.session_state.page == "registration":
-
-    if st.button("⬅ Back to Championship Selection"):
+    if st.button("⬅ رجوع لاختيار البطولة / Back to Championship Selection"):
         st.session_state.page = "select_championship"
         safe_rerun()
 
@@ -141,7 +172,7 @@ if st.session_state.page == "registration":
     """, unsafe_allow_html=True)
 
     st.markdown(
-        f"<h3 style='color:black'>🏆 Registration Form: {st.session_state.selected_championship}</h3>",
+        f"<h3 style='color:black'>🏆 نموذج التسجيل: {st.session_state.selected_championship}</h3>",
         unsafe_allow_html=True
     )
 
@@ -152,9 +183,9 @@ if st.session_state.page == "registration":
     # African Master Course
     # ------------------------------------------------------------
     if st.session_state.selected_championship == "African Master Course":
-        course_type = st.selectbox("Choose course type:", ["Master", "General"])
-        st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
-        num_players = st.number_input("Number of players to add:", min_value=1, value=1)
+        course_type = st.selectbox(BILINGUAL_LABELS["Choose course type:"], ["Master", "General"])
+        st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
+        num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
 
         belt_options = [
             "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
@@ -166,15 +197,15 @@ if st.session_state.page == "registration":
 
         for i in range(num_players):
             key_suffix = f"_{submit_count}_{i}"
-            with st.expander(f"Player {i+1}"):
-                athlete_name = st.text_input("Athlete Name", key=f"name{key_suffix}")
-                dob = st.date_input("Date of Birth", min_value=date(1960,1,1),
+            with st.expander(f"اللاعب {i+1} / Player {i+1}"):
+                athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{key_suffix}")
+                dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1),
                                     max_value=date.today(), key=f"dob{key_suffix}")
-                nationality = st.text_input("Nationality", key=f"nat{key_suffix}")
-                phone = st.text_input("Phone Number", key=f"phone{key_suffix}")
-                sex = st.selectbox("Sex", ["Male", "Female"], key=f"sex{key_suffix}")
-                code = st.text_input("Player Code", key=f"code{key_suffix}")
-                belt = st.selectbox("Belt Degree", belt_options, key=f"belt{key_suffix}")
+                nationality = st.text_input(BILINGUAL_LABELS["Nationality"], key=f"nat{key_suffix}")
+                phone = st.text_input(BILINGUAL_LABELS["Phone Number"], key=f"phone{key_suffix}")
+                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male", "Female"], key=f"sex{key_suffix}")
+                code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{key_suffix}")
+                belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{key_suffix}")
 
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
@@ -196,11 +227,11 @@ if st.session_state.page == "registration":
     # Other Championships
     # ------------------------------------------------------------
     else:
-        st.session_state.club = st.text_input("Enter Club for all players", value=st.session_state.club)
-        st.session_state.nationality = st.text_input("Enter Nationality for all players", value=st.session_state.nationality)
-        st.session_state.coach_name = st.text_input("Enter Coach Name for all players", value=st.session_state.coach_name)
-        st.session_state.phone_number = st.text_input("Enter Phone Number for the Coach", value=st.session_state.phone_number)
-        num_players = st.number_input("Number of players to add:", min_value=1, value=1)
+        st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
+        st.session_state.nationality = st.text_input(BILINGUAL_LABELS["Enter Nationality for all players"], value=st.session_state.nationality)
+        st.session_state.coach_name = st.text_input(BILINGUAL_LABELS["Enter Coach Name for all players"], value=st.session_state.coach_name)
+        st.session_state.phone_number = st.text_input(BILINGUAL_LABELS["Enter Phone Number for the Coach"], value=st.session_state.phone_number)
+        num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
 
         belt_options = [
             "Kyu Junior yellow 10","Kyu Junior yellow 9","Kyu Junior orange 8","Kyu Junior orange green 7",
@@ -212,13 +243,13 @@ if st.session_state.page == "registration":
 
         for i in range(num_players):
             key_suffix = f"_{submit_count}_{i}"
-            with st.expander(f"Player {i+1}"):
-                athlete_name = st.text_input("Athlete Name", key=f"name{key_suffix}")
-                dob = st.date_input("Date of Birth", min_value=date(1960,1,1),
+            with st.expander(f"اللاعب {i+1} / Player {i+1}"):
+                athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{key_suffix}")
+                dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1),
                                     max_value=date.today(), key=f"dob{key_suffix}")
-                sex = st.selectbox("Sex", ["Male", "Female"], key=f"sex{key_suffix}")
-                code = st.text_input("Player Code", key=f"code{key_suffix}")
-                belt = st.selectbox("Belt Degree", belt_options, key=f"belt{key_suffix}")
+                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male", "Female"], key=f"sex{key_suffix}")
+                code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{key_suffix}")
+                belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{key_suffix}")
 
                 federation_champs = [
                     "African Open Traditional Karate Championship",
@@ -226,7 +257,7 @@ if st.session_state.page == "registration":
                 ]
                 if st.session_state.selected_championship in federation_champs:
                     federation = st.selectbox(
-                        "Select Federation",
+                        BILINGUAL_LABELS["Select Federation"],
                         ["Egyptian Traditional Karate Federation", "United General Federation"],
                         key=f"fed{key_suffix}"
                     )
@@ -240,7 +271,7 @@ if st.session_state.page == "registration":
                     comp_list = ["Individual Kata","Kata Team","Individual Kumite","Fuko Go",
                                  "Inbo Mix","Inbo Male","Inbo Female","Kumite Team"]
 
-                competitions = st.multiselect("Competitions", comp_list, key=f"comp{key_suffix}")
+                competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{key_suffix}")
 
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
@@ -259,9 +290,8 @@ if st.session_state.page == "registration":
                 })
 
 # ---------------- Submit ----------------
-if st.button("Submit All"):
-
-    df = load_data()
+if st.button("إرسال الكل / Submit All"):
+    df, display_df = load_data()
     error = False
     errors_list = []
 
@@ -278,22 +308,21 @@ if st.button("Submit All"):
 
         existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
         if code and code in existing_codes:
-            errors_list.append(f"Player Code '{code}' already exists in {championship}!")
+            errors_list.append(f"كود اللاعب '{code}' موجود مسبقاً في {championship} / Player Code '{code}' already exists!")
             error = True
 
-        # Required fields
-        if not name: error = True; errors_list.append("Athlete name is required.")
-        if not code: error = True; errors_list.append("Player code is required.")
-        if not belt: error = True; errors_list.append("Belt degree is required.")
-        if not club: error = True; errors_list.append("Club is required.")
-        if not nationality: error = True; errors_list.append("Nationality is required.")
+        if not name: error = True; errors_list.append("اسم اللاعب مطلوب / Athlete name is required.")
+        if not code: error = True; errors_list.append("كود اللاعب مطلوب / Player code is required.")
+        if not belt: error = True; errors_list.append("درجة الحزام مطلوبة / Belt degree is required.")
+        if not club: error = True; errors_list.append("النادي مطلوب / Club is required.")
+        if not nationality: error = True; errors_list.append("الجنسية مطلوبة / Nationality is required.")
         if st.session_state.selected_championship != "African Master Course":
-            if competitions.strip() == "": error=True; errors_list.append("At least one competition is required.")
-            if not coach: error=True; errors_list.append("Coach name is required.")
-        if not phone: error = True; errors_list.append("Phone number is required.")
+            if competitions.strip() == "": error=True; errors_list.append("يجب اختيار مسابقة واحدة على الأقل / At least one competition is required.")
+            if not coach: error=True; errors_list.append("اسم المدرب مطلوب / Coach name is required.")
+        if not phone: error = True; errors_list.append("رقم الهاتف مطلوب / Phone number is required.")
 
     if error:
-        st.error("Fix the following issues:")
+        st.error("يجب تصحيح الأخطاء التالية / Fix the following issues:")
         for m in errors_list:
             st.write("- ", m)
         st.stop()
@@ -302,7 +331,7 @@ if st.button("Submit All"):
         df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
     save_data(df)
-    st.success(f"✅ {len(athletes_data)} players registered successfully!")
+    st.success(f"✅ تم تسجيل {len(athletes_data)} لاعب بنجاح / {len(athletes_data)} players registered successfully!")
 
     for key in ["club","nationality","coach_name","phone_number"]:
         st.session_state[key] = ""
@@ -322,17 +351,24 @@ st.sidebar.header("Admin Login")
 admin_password = st.sidebar.text_input("Enter Admin Password", type="password")
 if admin_password == "mobadr90":
     st.sidebar.success("Logged in as Admin ✅")
-    df = load_data()
+    df, display_df = load_data()
     if df.empty:
         st.info("No data yet.")
     else:
-        st.dataframe(df, use_container_width=True)
+        # Use column_config for bilingual headers in admin panel
+        column_config = {}
+        for eng_col, bi_col in BILINGUAL_COLS.items():
+            if eng_col in display_df.columns:
+                column_config[eng_col] = st.column_config.TextColumn(bi_col)
+        
+        st.dataframe(display_df, use_container_width=True, column_config=column_config)
+        
         buffer = io.BytesIO()
         df.to_excel(buffer, index=False, engine="openpyxl")
         buffer.seek(0)
         name = st.session_state.get("selected_championship","athletes").replace(" ","_")
         st.download_button(
-            "📥 Download Excel",
+            "📥Download Excel",
             buffer,
             file_name=f"{name}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
