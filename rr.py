@@ -4,13 +4,7 @@ from datetime import date
 import io
 from pathlib import Path
 import requests
-import logging 
 
-# =====================================================
-# ---------------- Logger Fix -------------------------
-# =====================================================
-logging.basicConfig(level=logging.ERROR) 
-logger = logging.getLogger(__name__)      
 
 # =====================================================
 # ---------------- Google Sheet API -------------------
