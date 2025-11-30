@@ -163,11 +163,11 @@ if st.session_state.page == "select_championship":
         [
             "African Master Course / الماستر كورس الافريقى",
             "African Open Traditional Karate Championship / بطولة افريقيا المفتوحة للكاراتيه التقليدي",
-            "North Africa Unitied Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
+            "North Africa united Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
         ]
     )
 
-    if st.button("Next ➜"):
+    if st.button("Next/التالي ➜"):
         st.session_state.selected_championship = championship
         st.session_state.page = "registration"
         safe_rerun()
@@ -343,7 +343,7 @@ if st.session_state.page == "registration":
                 # Federation logic (✅ Fixed scope issue)
                 federation_champs = [
                     "African Open Traditional Karate Championship / بطولة افريقيا المفتوحة للكاراتيه التقليدي",
-                    "North Africa Unitied Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
+                    "North Africa united Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
                 ]
 
                 if st.session_state.selected_championship in federation_champs:
