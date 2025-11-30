@@ -213,7 +213,7 @@ if st.session_state.page == "registration":
         st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
         num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
 
-       belt_options = [
+        belt_options = [
     "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين",
     "Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
     "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين",
