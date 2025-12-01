@@ -1,9 +1,10 @@
-mport streamlit as st
+import streamlit as st
 import pandas as pd
 from datetime import date
 import io
 from pathlib import Path
 import requests
+import re  
 
 # =====================================================
 # ---------------- Google Sheet API -------------------
@@ -14,10 +15,18 @@ GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68Up
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
-    # Send ALL new rows to Google Sheet (مش الصف الأخير بس)
+  
     if not df.empty:
         for _, row in df.iterrows():
             save_to_google_sheet(row.to_dict())
+
+
+def validate_phone(phone):
+   
+    pattern = r'^01[0-9]{9}$'
+    if re.match(pattern, phone.strip()):
+        return True
+    return False
 
 # =====================================================
 # ---------------- Logos ------------------------------
@@ -341,7 +350,7 @@ if st.session_state.page == "registration":
             club = athlete["Club"]
             nationality = athlete["Nationality"]
             coach = athlete["Coach Name"]
-            phone = athlete["Phone Number"]
+            phone = athlete["Phone Number"]  # ✅ رقم التليفون
             competitions = athlete["Competitions"]
             championship = athlete["Championship"]
 
@@ -354,7 +363,12 @@ if st.session_state.page == "registration":
             if not belt: errors.append("❌ Belt degree is required.")
             if not club: errors.append("❌ Club is required.")
             if not nationality: errors.append("❌ Nationality is required.")
-            if not phone: errors.append("❌ Phone number is required.")
+            
+            # ✅ تحقق من رقم التليفون الجديد
+            if not phone: 
+                errors.append("❌ Phone number is required.")
+            elif not validate_phone(phone):
+                errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx (مثال: 01012345678)")
 
             if not championship.startswith("African Master Course"):
                 if not competitions: errors.append("❌ At least one competition is required.")
