@@ -337,8 +337,8 @@ if st.session_state.page == "registration":
     # ---------------- Submit Button ----------------------
     # =====================================================
   
-if st.button("Submit All / إرسال الكل") and athletes_data:
 
+if st.button("Submit All / إرسال الكل") and athletes_data:
     df, _ = load_data()
     errors = []
 
@@ -349,7 +349,7 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         club = athlete["Club"]
         nationality = athlete["Nationality"]
         coach = athlete["Coach Name"]
-        phone = athlete["Phone Number"]  # ✅ رقم التليفون
+        phone = athlete["Phone Number"]
         competitions = athlete["Competitions"]
         championship = athlete["Championship"]
 
@@ -362,38 +362,43 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         if not belt: errors.append("❌ Belt degree is required.")
         if not club: errors.append("❌ Club is required.")
         if not nationality: errors.append("❌ Nationality is required.")
-
+        
         if not phone: 
             errors.append("❌ Phone number is required.")
         elif not validate_phone(phone):
-            errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx)")
+            errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx")
 
         if not championship.startswith("African Master Course"):
             if not competitions: errors.append("❌ At least one competition is required.")
             if not coach: errors.append("❌ Coach name is required.")
 
     if errors:
-        st.error("Fix the following errors:")
+        st.error("🔴 Fix the following errors:")
         for e in errors:
-            st.write("-", e)
+            st.write(f"• {e}")
     else:
-        # ✅ تصحيح: إضافة اللاعبين بعد الـ else
+        # ✅ حفظ البيانات
         for athlete in athletes_data:
             df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
-
-        # حفظ البيانات وإرسال اللاعبين الجدد لجوجل شيت
+        
         save_data(df, athletes_data)
+        
+        # ✅ رسالة نجاح دائمة + زر جديد
+        st.success(f" {len(athletes_data)} players registered successfully! ✓")
+        st.balloons()  
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("➕ Add More Players / إضافة المزيد"):
+                st.session_state.submit_count += 1
+                st.session_state.club = ""
+                st.session_state.nationality = ""
+                st.session_state.coach_name = ""
+                st.session_state.phone_number = ""
+                st.rerun()
+        
+        st.stop()  
 
-        st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
-
-        # تأخير صغير عشان الرسالة تظهر قبل الـ rerun
-        st.session_state.submit_count += 1
-        st.session_state.club = ""
-        st.session_state.nationality = ""
-        st.session_state.coach_name = ""
-        st.session_state.phone_number = ""
-
-        st.rerun()
 
 # =====================================================
 # ---------------- Admin Panel -------------------------
