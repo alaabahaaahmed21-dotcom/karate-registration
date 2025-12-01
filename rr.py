@@ -339,6 +339,10 @@ if st.session_state.page == "registration":
 # ---------------- Submit Button ----------------------
 # =====================================================
 
+# =====================================================
+# ---------------- Submit Button ----------------------
+# =====================================================
+
 if st.button("Submit All / إرسال الكل") and athletes_data:
     df, _ = load_data()
     errors = []
@@ -378,27 +382,33 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         for e in errors:
             st.write(f"• {e}")
     else:
-        # ✅ حفظ البيانات
+        # حفظ البيانات
         for athlete in athletes_data:
             df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
         
         save_data(df, athletes_data)
         
-      
+        # ✅ رسالة نجاح
         st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
+        
+        # ✅ إعادة تعيين كل الحقول
+        st.session_state.submit_count += 1
+        st.session_state.club = ""
+        st.session_state.nationality = ""
+        st.session_state.coach_name = ""
+        st.session_state.phone_number = ""
+        
+        # مسح جميع حقول اللاعبين
+        for key in list(st.session_state.keys()):
+            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "code_", "belt_", "fed_", "fed_master_", "comp_"]):
+                del st.session_state[key]
         
         col1, col2 = st.columns(2)
         with col1:
             if st.button("➕ Add More Players / إضافة المزيد"):
-                st.session_state.submit_count += 1
-                st.session_state.club = ""
-                st.session_state.nationality = ""
-                st.session_state.coach_name = ""
-                st.session_state.phone_number = ""
                 st.rerun()
         
-        st.stop()  
-
+        st.stop()
 
 # =====================================================
 # ---------------- Admin Panel -------------------------
