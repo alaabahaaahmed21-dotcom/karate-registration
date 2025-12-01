@@ -1,4 +1,4 @@
-mport streamlit as st
+import streamlit as st
 import pandas as pd
 from datetime import date
 import io
@@ -14,10 +14,10 @@ GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68Up
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
-    # Send only the last added row (one row)
+    # Send ALL new rows to Google Sheet (مش الصف الأخير بس)
     if not df.empty:
-        last_row = df.iloc[-1].to_dict()
-        save_to_google_sheet(last_row)
+        for _, row in df.iterrows():
+            save_to_google_sheet(row.to_dict())
 
 # =====================================================
 # ---------------- Logos ------------------------------
@@ -222,6 +222,14 @@ if st.session_state.page == "registration":
                 sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
                 code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{suffix}")
                 belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
+                
+                # ✅ إضافة زر الاتحاد للماستر كورس
+                federation = st.selectbox(
+                    BILINGUAL_LABELS["Select Federation"],
+                    ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
+                     "United General Committee / لجنة الجنرال الموحد"],
+                    key=f"fed_master_{suffix}"
+                )
 
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
@@ -234,7 +242,7 @@ if st.session_state.page == "registration":
                     "Player Code": code.strip(),
                     "Belt Degree": belt,
                     "Competitions": "",
-                    "Federation": "",
+                    "Federation": federation,  # ✅ حفظ الاتحاد
                     "Championship": f"African Master Course - {course_type}"
                 })
 
@@ -319,7 +327,7 @@ if st.session_state.page == "registration":
                 })
 
     # =====================================================
-    # ---------------- Submit Button -  --------
+    # ---------------- Submit Button ----------------------
     # =====================================================
     if st.button("Submit All / إرسال الكل") and athletes_data:
 
@@ -362,7 +370,6 @@ if st.session_state.page == "registration":
 
             save_data(df)
             st.success(f"✅ {len(athletes_data)} players registered successfully!")
-
 
             st.session_state.submit_count += 1
             st.session_state.club = ""
