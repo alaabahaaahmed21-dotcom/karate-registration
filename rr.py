@@ -31,14 +31,12 @@ img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registr
 # =====================================================
 # ---------------- CSS --------------------------------
 # =====================================================
-
 st.markdown("""
 <style>
 .image-row { display: flex; justify-content: center; gap: 10px; flex-wrap: nowrap; }
 .image-row img { width: 80px; height: auto; }
 </style>
-""", unsafe_allow_html=True)
- =====================================================
+""", unsafe_allow_html=True) =====================================================
 # ---------------- Page State --------------------------
 # =====================================================
 
