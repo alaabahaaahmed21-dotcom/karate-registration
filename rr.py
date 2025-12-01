@@ -31,12 +31,15 @@ img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registr
 # =====================================================
 # ---------------- CSS --------------------------------
 # =====================================================
+
 st.markdown("""
 <style>
 .image-row { display: flex; justify-content: center; gap: 10px; flex-wrap: nowrap; }
 .image-row img { width: 80px; height: auto; }
 </style>
-""", unsafe_allow_html=True) =====================================================
+""", unsafe_allow_html=True)
+
+# =====================================================
 # ---------------- Page State --------------------------
 # =====================================================
 
@@ -337,14 +340,14 @@ if st.session_state.page == "registration":
             existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
             if code and code in existing_codes:
                 errors.append(f"❌ Player Code '{code}' already exists!")
-            
+
             if not name: errors.append("❌ Athlete name is required.")
             if not code: errors.append("❌ Player code is required.")
             if not belt: errors.append("❌ Belt degree is required.")
             if not club: errors.append("❌ Club is required.")
             if not nationality: errors.append("❌ Nationality is required.")
             if not phone: errors.append("❌ Phone number is required.")
-            
+
             if not championship.startswith("African Master Course"):
                 if not competitions: errors.append("❌ At least one competition is required.")
                 if not coach: errors.append("❌ Coach name is required.")
@@ -360,13 +363,13 @@ if st.session_state.page == "registration":
             save_data(df)
             st.success(f"✅ {len(athletes_data)} players registered successfully!")
 
-           
+
             st.session_state.submit_count += 1
             st.session_state.club = ""
             st.session_state.nationality = ""
             st.session_state.coach_name = ""
             st.session_state.phone_number = ""
-            
+
             st.rerun()
 
 # =====================================================
