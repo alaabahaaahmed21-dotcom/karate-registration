@@ -34,79 +34,11 @@ img4 = "https://raw.githubusercontent.com/alaabahaaahmed21-dotcom/karate-registr
 
 st.markdown("""
 <style>
-/* حجم الخطوط حسب الشاشة - اللوجوهات زي ما هي */
-
-/* موبايل (أقل من 768px) */
-@media (max-width: 768px) {
-    h1 { font-size: 1.5rem !important; }
-    h2, h3 { font-size: 1.2rem !important; }
-    h4, h5, h6 { font-size: 1.1rem !important; }
-    
-    /* نصوص الـ Labels والـ Widgets */
-    .stMarkdown p, .stTextInput > label, .stSelectbox > label, 
-    .stNumberInput > label, .stDateInput > label {
-        font-size: 14px !important;
-    }
-    
-    /* نصوص داخل المدخلات */
-    input, select {
-        font-size: 16px !important;  /* مطلوب للموبايل */
-        padding: 12px !important;
-        height: 48px !important;
-    }
-    
-    /* الأزرار */
-    button {
-        font-size: 16px !important;
-        height: 48px !important;
-        padding: 0 20px !important;
-    }
-    
-    /* الـ DataFrame */
-    .stDataFrame {
-        font-size: 12px !important;
-    }
-}
-
-/* تابلت (769px - 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-    h1 { font-size: 1.8rem !important; }
-    h2, h3 { font-size: 1.4rem !important; }
-    .stMarkdown p, .stTextInput > label, .stSelectbox > label {
-        font-size: 15px !important;
-    }
-    input, select, button {
-        font-size: 16px !important;
-    }
-}
-
-/* كمبيوتر (أكثر من 1025px) */
-@media (min-width: 1025px) {
-    h1 { font-size: 2.5rem !important; }
-    h2, h3 { font-size: 2rem !important; }
-    .stMarkdown p, .stTextInput > label, .stSelectbox > label {
-        font-size: 18px !important;
-    }
-    input, select {
-        font-size: 18px !important;
-        padding: 15px !important;
-    }
-    button {
-        font-size: 18px !important;
-        padding: 12px 30px !important;
-    }
-}
-
-
-.expanderLabel {
-    font-size: 16px !important;
-}
-.sidebar .stTextInput > label {
-    font-size: 14px !important;
-}
+.image-row { display: flex; justify-content: center; gap: 10px; flex-wrap: nowrap; }
+.image-row img { width: 80px; height: auto; }
 </style>
 """, unsafe_allow_html=True)
-# =====================================================
+ =====================================================
 # ---------------- Page State --------------------------
 # =====================================================
 
