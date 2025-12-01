@@ -333,10 +333,11 @@ if st.session_state.page == "registration":
                     "Championship": st.session_state.selected_championship
                 })
 
-    # =====================================================
-    # ---------------- Submit Button ----------------------
-    # =====================================================
-  
+   
+
+# =====================================================
+# ---------------- Submit Button ----------------------
+# =====================================================
 
 if st.button("Submit All / إرسال الكل") and athletes_data:
     df, _ = load_data()
@@ -383,9 +384,8 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         
         save_data(df, athletes_data)
         
-        # ✅ رسالة نجاح دائمة + زر جديد
-        st.success(f" {len(athletes_data)} players registered successfully! ✓")
-        st.balloons()  
+      
+        st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
         
         col1, col2 = st.columns(2)
         with col1:
