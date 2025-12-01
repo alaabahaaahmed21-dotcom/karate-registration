@@ -382,16 +382,18 @@ if st.session_state.page == "registration":
             for athlete in athletes_data:
                 df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
-            save_data(df)
-            st.success(f"✅ {len(athletes_data)} players registered successfully!")
+           save_data(df)
+st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
 
-            st.session_state.submit_count += 1
-            st.session_state.club = ""
-            st.session_state.nationality = ""
-            st.session_state.coach_name = ""
-            st.session_state.phone_number = ""
+# تأخير صغير عشان الرسالة تظهر قبل الـ rerun
+st.session_state.submit_count += 1
+st.session_state.club = ""
+st.session_state.nationality = ""
+st.session_state.coach_name = ""
+st.session_state.phone_number = ""
 
-            st.rerun()
+st.rerun()
+
 
 # =====================================================
 # ---------------- Admin Panel -------------------------
