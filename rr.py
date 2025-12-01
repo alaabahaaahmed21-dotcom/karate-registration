@@ -12,17 +12,15 @@ import re
 
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"
 
-def save_data(df):
+def save_data(df, new_players):
+    # حفظ كل البيانات في CSV
     df.to_csv(DATA_FILE, index=False)
 
-  
-    if not df.empty:
-        for _, row in df.iterrows():
-            save_to_google_sheet(row.to_dict())
-
+    # إرسال فقط اللاعبين الجدد لجوجل شيت
+    for player in new_players:
+        save_to_google_sheet(player)
 
 def validate_phone(phone):
-   
     pattern = r'^01[0-9]{9}$'
     if re.match(pattern, phone.strip()):
         return True
@@ -338,62 +336,64 @@ if st.session_state.page == "registration":
     # =====================================================
     # ---------------- Submit Button ----------------------
     # =====================================================
-    if st.button("Submit All / إرسال الكل") and athletes_data:
+  
+if st.button("Submit All / إرسال الكل") and athletes_data:
 
-        df, _ = load_data()
-        errors = []
+    df, _ = load_data()
+    errors = []
 
+    for athlete in athletes_data:
+        name = athlete["Athlete Name"]
+        code = athlete["Player Code"]
+        belt = athlete["Belt Degree"]
+        club = athlete["Club"]
+        nationality = athlete["Nationality"]
+        coach = athlete["Coach Name"]
+        phone = athlete["Phone Number"]  # ✅ رقم التليفون
+        competitions = athlete["Competitions"]
+        championship = athlete["Championship"]
+
+        existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
+        if code and code in existing_codes:
+            errors.append(f"❌ Player Code '{code}' already exists!")
+
+        if not name: errors.append("❌ Athlete name is required.")
+        if not code: errors.append("❌ Player code is required.")
+        if not belt: errors.append("❌ Belt degree is required.")
+        if not club: errors.append("❌ Club is required.")
+        if not nationality: errors.append("❌ Nationality is required.")
+
+        if not phone: 
+            errors.append("❌ Phone number is required.")
+        elif not validate_phone(phone):
+            errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx)")
+
+        if not championship.startswith("African Master Course"):
+            if not competitions: errors.append("❌ At least one competition is required.")
+            if not coach: errors.append("❌ Coach name is required.")
+
+    if errors:
+        st.error("Fix the following errors:")
+        for e in errors:
+            st.write("-", e)
+    else:
+        # ✅ تصحيح: إضافة اللاعبين بعد الـ else
         for athlete in athletes_data:
-            name = athlete["Athlete Name"]
-            code = athlete["Player Code"]
-            belt = athlete["Belt Degree"]
-            club = athlete["Club"]
-            nationality = athlete["Nationality"]
-            coach = athlete["Coach Name"]
-            phone = athlete["Phone Number"]  # ✅ رقم التليفون
-            competitions = athlete["Competitions"]
-            championship = athlete["Championship"]
+            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
-            existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
-            if code and code in existing_codes:
-                errors.append(f"❌ Player Code '{code}' already exists!")
+        # حفظ البيانات وإرسال اللاعبين الجدد لجوجل شيت
+        save_data(df, athletes_data)
 
-            if not name: errors.append("❌ Athlete name is required.")
-            if not code: errors.append("❌ Player code is required.")
-            if not belt: errors.append("❌ Belt degree is required.")
-            if not club: errors.append("❌ Club is required.")
-            if not nationality: errors.append("❌ Nationality is required.")
-            
-            # ✅ تحقق من رقم التليفون الجديد
-            if not phone: 
-                errors.append("❌ Phone number is required.")
-            elif not validate_phone(phone):
-                errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx (مثال: 01012345678)")
+        st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
 
-            if not championship.startswith("African Master Course"):
-                if not competitions: errors.append("❌ At least one competition is required.")
-                if not coach: errors.append("❌ Coach name is required.")
+        # تأخير صغير عشان الرسالة تظهر قبل الـ rerun
+        st.session_state.submit_count += 1
+        st.session_state.club = ""
+        st.session_state.nationality = ""
+        st.session_state.coach_name = ""
+        st.session_state.phone_number = ""
 
-        if errors:
-            st.error("Fix the following errors:")
-            for e in errors:
-                st.write("-", e)
-        else:
-            for athlete in athletes_data:
-                df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
-
-           save_data(df)
-st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
-
-# تأخير صغير عشان الرسالة تظهر قبل الـ rerun
-st.session_state.submit_count += 1
-st.session_state.club = ""
-st.session_state.nationality = ""
-st.session_state.coach_name = ""
-st.session_state.phone_number = ""
-
-st.rerun()
-
+        st.rerun()
 
 # =====================================================
 # ---------------- Admin Panel -------------------------
