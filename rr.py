@@ -13,11 +13,16 @@ import re
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"
 
 def save_data(df, new_players):
-   
+    # حفظ CSV محلي
     df.to_csv(DATA_FILE, index=False)
-
     
+    # حفظ كل لاعب في Google Sheet
     for player in new_players:
+        # نضمن أن Height و Weight موجودين كقيم صحيحة
+        if player.get("Height") is None:
+            player["Height"] = ""
+        if player.get("Weight") is None:
+            player["Weight"] = ""
         save_to_google_sheet(player)
 
 def validate_phone(phone):
@@ -252,6 +257,11 @@ if st.session_state.page == "registration":
                     key=f"fed_master_{suffix}"
                 )
 
+                height = weight = None
+                if "United General Committee" in federation:
+                    height = st.number_input("Height / الطول (cm)", min_value=100, max_value=250, step=1, key=f"height{suffix}")
+                    weight = st.number_input("Weight / الوزن (kg)", min_value=20, max_value=200, step=1, key=f"weight{suffix}")
+
                 athletes_data.append({
                     "Athlete Name": athlete_name.strip(),
                     "Club": st.session_state.club.strip(),
@@ -264,61 +274,6 @@ if st.session_state.page == "registration":
                     "Competitions": "",
                     "Federation": federation,
                     "Championship": f"African Master Course - {course_type}",
-                    "Height": None,
-                    "Weight": None
-                })
-
-    else:
-        st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
-        st.session_state.nationality = st.text_input(BILINGUAL_LABELS["Enter Nationality for all players"], value=st.session_state.nationality)
-        st.session_state.coach_name = st.text_input(BILINGUAL_LABELS["Enter Coach Name for all players"], value=st.session_state.coach_name)
-        st.session_state.phone_number = st.text_input(BILINGUAL_LABELS["Enter Phone Number for the Coach"], value=st.session_state.phone_number)
-        num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
-
-        for i in range(num_players):
-            suffix = f"_{submit_count}_{i}"
-            with st.expander(f"Player {i+1}"):
-                athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
-                dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
-                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
-                belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
-
-                federation = ""
-                comp_list = []
-
-                if st.session_state.selected_championship in federation_champs:
-                    federation = st.selectbox(
-                        BILINGUAL_LABELS["Select Federation"],
-                        ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
-                         "United General Committee / لجنة الجنرال الموحد"],
-                        key=f"fed{suffix}"
-                    )
-                    comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
-
-                    height = weight = None
-                    if "United General Committee" in federation:
-                        height = st.number_input("Height / الطول (cm)", min_value=100, max_value=250, step=1, key=f"height{suffix}")
-                        weight = st.number_input("Weight / الوزن (kg)", min_value=20, max_value=200, step=1, key=f"weight{suffix}")
-                else:
-                    comp_list = ["Individual Kata / كاتا فردي","Kata Team / كاتا جماعي","Individual Kumite / كوميتيه فردي",
-                                "Fuko Go / فوكو جو","Inbo Mix / إنبو مختلط","Inbo Male / إنبو ذكور",
-                                "Inbo Female / إنبو إناث","Kumite Team / كوميتيه جماعي", "Ippon Shobu / ايبون شوبو "]
-                    height = weight = None
-
-                competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
-
-                athletes_data.append({
-                    "Athlete Name": athlete_name.strip(),
-                    "Club": st.session_state.club.strip(),
-                    "Nationality": st.session_state.nationality.strip(),
-                    "Coach Name": st.session_state.coach_name.strip(),
-                    "Phone Number": st.session_state.phone_number.strip(),
-                    "Date of Birth": str(dob),
-                    "Sex": sex,
-                    "Belt Degree": belt,
-                    "Competitions": ", ".join(competitions),
-                    "Federation": federation,
-                    "Championship": st.session_state.selected_championship,
                     "Height": height,
                     "Weight": weight
                 })
@@ -401,5 +356,3 @@ if admin_password == "mobadr90":
             if bi_col in display_df.columns
         }
         st.dataframe(display_df, use_container_width=True, column_config=column_config)
-
-       
