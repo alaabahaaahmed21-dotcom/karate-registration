@@ -1,4 +1,4 @@
-mport streamlit as st
+import streamlit as st
 import pandas as pd
 from datetime import date
 import io
@@ -68,7 +68,6 @@ BILINGUAL_COLS = {
     "Phone Number": "Phone Number / رقم الهاتف",
     "Date of Birth": "Date of Birth / تاريخ الميلاد",
     "Sex": "Sex / الجنس",
-    "Player Code": "Player Code / كود اللاعب",
     "Belt Degree": "Belt Degree / درجة الحزام",
     "Competitions": "Competitions / المسابقات",
     "Federation": "Federation / الاتحاد"
@@ -86,7 +85,6 @@ BILINGUAL_LABELS = {
     "Phone Number": "Phone Number / رقم الهاتف",
     "Date of Birth": "Date of Birth / تاريخ الميلاد",
     "Sex": "Sex / الجنس",
-    "Player Code": "Player Code / كود اللاعب",
     "Belt Degree": "Belt Degree / درجة الحزام",
     "Competitions": "Competitions / المسابقات",
     "Federation": "Federation / الاتحاد",
@@ -227,7 +225,6 @@ if st.session_state.page == "registration":
                 nationality = st.text_input(BILINGUAL_LABELS["Nationality"], key=f"nat{suffix}")
                 phone = st.text_input(BILINGUAL_LABELS["Phone Number"], key=f"phone{suffix}")
                 sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
-                code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{suffix}")
                 belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
                 
                 # ✅ إضافة زر الاتحاد للماستر كورس
@@ -246,7 +243,6 @@ if st.session_state.page == "registration":
                     "Phone Number": phone.strip(),
                     "Date of Birth": str(dob),
                     "Sex": sex,
-                    "Player Code": code.strip(),
                     "Belt Degree": belt,
                     "Competitions": "",
                     "Federation": federation,  # ✅ حفظ الاتحاد
@@ -292,7 +288,6 @@ if st.session_state.page == "registration":
                 athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
                 dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
                 sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
-                code = st.text_input(BILINGUAL_LABELS["Player Code"], key=f"code{suffix}")
                 belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
 
                 federation = ""
@@ -326,7 +321,6 @@ if st.session_state.page == "registration":
                     "Phone Number": st.session_state.phone_number.strip(),
                     "Date of Birth": str(dob),
                     "Sex": sex,
-                    "Player Code": code.strip(),
                     "Belt Degree": belt,
                     "Competitions": ", ".join(competitions),
                     "Federation": federation,
@@ -349,7 +343,6 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
 
     for athlete in athletes_data:
         name = athlete["Athlete Name"]
-        code = athlete["Player Code"]
         belt = athlete["Belt Degree"]
         club = athlete["Club"]
         nationality = athlete["Nationality"]
@@ -358,12 +351,9 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         competitions = athlete["Competitions"]
         championship = athlete["Championship"]
 
-        existing_codes = set(df[df["Championship"] == championship]["Player Code"].astype(str))
-        if code and code in existing_codes:
-            errors.append(f"❌ Player Code '{code}' already exists!")
+       
 
         if not name: errors.append("❌ Athlete name is required.")
-        if not code: errors.append("❌ Player code is required.")
         if not belt: errors.append("❌ Belt degree is required.")
         if not club: errors.append("❌ Club is required.")
         if not nationality: errors.append("❌ Nationality is required.")
@@ -400,7 +390,7 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         
         # مسح جميع حقول اللاعبين
         for key in list(st.session_state.keys()):
-            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "code_", "belt_", "fed_", "fed_master_", "comp_"]):
+            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "belt_", "fed_", "fed_master_", "comp_"]):
                 del st.session_state[key]
         
         col1, col2 = st.columns(2)
