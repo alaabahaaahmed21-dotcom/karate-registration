@@ -12,7 +12,6 @@ import re
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzpLfTMCfKY8HTDAjaayTFoDID3EI8PIq-6aiZHXqaz3JqxrppKSrjGGmxJtONRRTIv/exec"
 
 def save_data(df, new_players):
-    # تأكد من تحويل None لقيمة فارغة قبل الحفظ
     for player in new_players:
         if player.get("Height") is None:
             player["Height"] = ""
@@ -129,7 +128,6 @@ def load_data():
 
 if "submit_count" not in st.session_state:
     st.session_state.submit_count = 0
-
 if "club" not in st.session_state:
     st.session_state.club = ""
 if "nationality" not in st.session_state:
@@ -191,10 +189,7 @@ if st.session_state.page == "registration":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(
-        f"<h3>🏆 : {st.session_state.selected_championship}</h3>",
-        unsafe_allow_html=True
-    )
+    st.markdown(f"<h3>🏆 : {st.session_state.selected_championship}</h3>", unsafe_allow_html=True)
 
     athletes_data = []
     submit_count = st.session_state.submit_count
@@ -233,7 +228,6 @@ if st.session_state.page == "registration":
     # ============== Form Inputs common =================
     st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
     st.session_state.nationality = st.text_input(BILINGUAL_LABELS["Enter Nationality for all players"], value=st.session_state.nationality)
-    st.session_state.coach_name = st.text_input(BILINGUAL_LABELS["Enter Coach Name for all players"], value=st.session_state.coach_name)
     st.session_state.phone_number = st.text_input(BILINGUAL_LABELS["Enter Phone Number for the Coach"], value=st.session_state.phone_number)
     num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
 
@@ -247,21 +241,22 @@ if st.session_state.page == "registration":
 
             # ======== African Master Course ==========
             if st.session_state.selected_championship.startswith("African Master Course"):
-                course_type = st.selectbox(
-                    BILINGUAL_LABELS["Choose course type:"],
-                    ["Master / ماستر ", "General / جنرال"],
-                    key=f"course_{suffix}"
-                )
+                if "course_type_master" not in st.session_state:
+                    st.session_state.course_type_master = st.selectbox(
+                        BILINGUAL_LABELS["Choose course type:"],
+                        ["Master / ماستر ", "General / جنرال"]
+                    )
+                course_type = st.session_state.course_type_master
+                championship_name = f"African Master Course - {course_type}"
+
                 federation = st.selectbox(
                     BILINGUAL_LABELS["Select Federation"],
                     ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
                      "United General Committee / لجنة الجنرال الموحد"],
                     key=f"fed_master_{suffix}"
                 )
-                competitions = ""  # لا مسابقات
-                height = None
-                weight = None
-                championship_name = f"African Master Course - {course_type}"
+                competitions = ""
+                height = weight = None
 
             # ======== باقي البطولات ==========
             else:
@@ -292,17 +287,60 @@ if st.session_state.page == "registration":
                 "Athlete Name": athlete_name.strip(),
                 "Club": st.session_state.club.strip(),
                 "Nationality": st.session_state.nationality.strip(),
-                "Coach Name": "" if st.session_state.selected_championship.startswith("African Master Course") else st.session_state.coach_name.strip(),
-                "Phone Number": "" if st.session_state.selected_championship.startswith("African Master Course") else st.session_state.phone_number.strip(),
+                "Coach Name": "",  # مش موجود للماستر كورس
+                "Phone Number": st.session_state.phone_number.strip(),  # موجود
                 "Date of Birth": str(dob),
                 "Sex": sex,
                 "Belt Degree": belt,
-                "Competitions": competitions if isinstance(competitions, str) else ", ".join(competitions),
+                "Competitions": competitions,
                 "Federation": federation,
                 "Championship": championship_name,
                 "Height": height,
                 "Weight": weight
             })
+
+           
+            # ======== باقي البطولات ==========
+            else:
+                federation = ""
+                comp_list = []
+
+                if st.session_state.selected_championship in federation_champs:
+                    federation = st.selectbox(
+                        BILINGUAL_LABELS["Select Federation"],
+                        ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
+                         "United General Committee / لجنة الجنرال الموحد"],
+                        key=f"fed{suffix}"
+                    )
+                    comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
+
+                    height = weight = None
+                    if "United General Committee" in federation:
+                        height = st.number_input("Height / الطول (cm)", min_value=100, max_value=250, step=1, key=f"height{suffix}")
+                        weight = st.number_input("Weight / الوزن (kg)", min_value=20, max_value=200, step=1, key=f"weight{suffix}")
+                else:
+                    comp_list = egyptian_competitions
+                    height = weight = None
+
+                competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
+                championship_name = st.session_state.selected_championship
+
+         athletes_data.append({
+    "Athlete Name": athlete_name.strip(),
+    "Club": st.session_state.club.strip(),
+    "Nationality": st.session_state.nationality.strip(),
+    "Coach Name": "",  # مش موجود للماستر كورس
+    "Phone Number": phone_number.strip(),  # موجود
+    "Date of Birth": str(dob),
+    "Sex": sex,
+    "Belt Degree": belt,
+    "Competitions": competitions,
+    "Federation": federation,
+    "Championship": championship_name,
+    "Height": height,
+    "Weight": weight
+})
+
 
 # =====================================================
 # ---------------- Submit Button ----------------------
