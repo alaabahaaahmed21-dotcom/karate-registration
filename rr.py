@@ -301,7 +301,7 @@ if st.session_state.page == "registration":
 
            
             # ======== باقي البطولات ==========
-            else:
+                else:
                 federation = ""
                 comp_list = []
 
