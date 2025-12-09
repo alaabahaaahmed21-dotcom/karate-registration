@@ -175,6 +175,7 @@ if st.session_state.page == "select_championship":
 # =====================================================
 
 # ================= PAGE 2 — Registration =============
+# ================= PAGE 2 — Registration =============
 if st.session_state.page == "registration":
 
     if st.button("⬅ Back / رجوع"):
@@ -195,13 +196,34 @@ if st.session_state.page == "registration":
     athletes_data = []
     submit_count = st.session_state.submit_count
 
-    # ---------------- إعدادات عامة للبطولات غير الماستر ----------------
-    if not st.session_state.selected_championship.startswith("African Master Course"):
+    # --------------- تعيين قيمة افتراضية لـ num_players ---------------
+    num_players = 1
+
+    # --------------- إعدادات عامة للبطولات ----------------
+    if st.session_state.selected_championship.startswith("African Master Course"):
+        # نوع الدورة
+        course_type = st.selectbox(
+            BILINGUAL_LABELS["Choose course type:"],
+            ["Master / ماستر", "General / جنرال"]
+        )
+        # إدخال النادي لجميع اللاعبين
+        st.session_state.club = st.text_input(
+            BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club
+        )
+        # عدد اللاعبين
+        num_players = st.number_input(
+            BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=num_players
+        )
+
+    else:
+        # باقي البطولات
         st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
         st.session_state.nationality = st.text_input(BILINGUAL_LABELS["Enter Nationality for all players"], value=st.session_state.nationality)
         st.session_state.coach_name = st.text_input(BILINGUAL_LABELS["Enter Coach Name for all players"], value=st.session_state.coach_name)
         st.session_state.phone_number = st.text_input(BILINGUAL_LABELS["Enter Phone Number for the Coach"], value=st.session_state.phone_number)
-        num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
+        num_players = st.number_input(
+            BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=num_players
+        )
 
     # ---------------- خيارات الأحزمة ----------------
     belt_options = [
@@ -231,15 +253,9 @@ if st.session_state.page == "registration":
             # ---------------- Master Course ----------------
             if st.session_state.selected_championship.startswith("African Master Course"):
 
-                course_type = st.selectbox(
-                    BILINGUAL_LABELS["Choose course type:"],
-                    ["Master / ماستر", "General / جنرال"]
-                )
-
                 nationality = st.text_input(BILINGUAL_LABELS["Nationality"], key=f"nat{suffix}")
                 phone = st.text_input(BILINGUAL_LABELS["Phone Number"], key=f"phone{suffix}")
 
-                # الاتحاد
                 federation = st.selectbox(
                     BILINGUAL_LABELS["Select Federation"],
                     ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
