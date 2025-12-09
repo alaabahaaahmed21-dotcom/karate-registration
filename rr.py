@@ -13,10 +13,10 @@ import re
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"
 
 def save_data(df, new_players):
-    # حفظ كل البيانات في CSV
+   
     df.to_csv(DATA_FILE, index=False)
 
-    # إرسال فقط اللاعبين الجدد لجوجل شيت
+    
     for player in new_players:
         save_to_google_sheet(player)
 
@@ -70,7 +70,9 @@ BILINGUAL_COLS = {
     "Sex": "Sex / الجنس",
     "Belt Degree": "Belt Degree / درجة الحزام",
     "Competitions": "Competitions / المسابقات",
-    "Federation": "Federation / الاتحاد"
+    "Federation": "Federation / الاتحاد",
+    "Height": "Height / الطول",
+    "Weight": "Weight / الوزن"
 }
 
 # =====================================================
@@ -100,6 +102,7 @@ BILINGUAL_LABELS = {
 # =====================================================
 # ---------------- Load Data ---------------------------
 # =====================================================
+
 def save_to_google_sheet(row):
     try:
         r = requests.post(GOOGLE_SHEET_API, json=row)
@@ -113,7 +116,7 @@ def load_data():
         df = pd.read_csv(DATA_FILE)
         for c in cols:
             if c not in df.columns:
-                df[c] = ""
+                df[c] = None
         display_df = df.copy()
         display_df.rename(columns=BILINGUAL_COLS, inplace=True)
         return df, display_df
@@ -193,29 +196,44 @@ if st.session_state.page == "registration":
     )
 
     athletes_data = []
-
-    # ✅ Fixed: submit_count مباشرة من session_state
     submit_count = st.session_state.submit_count
+
+    belt_options = [
+        "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين", "Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
+        "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين", "Kyu Junior orange green 7 / برتقالي أخضر 7 كيو ناشئين",
+        "Kyu Junior green 6 / أخضر 6 كيو ناشئين", "Kyu Junior green blue 5 / أخضر أزرق 5 كيو ناشئين",
+        "Kyu Junior blue 4 / أزرق 4 كيو ناشئين", "Kyu Junior blue 3 / أزرق 3 كيو ناشئين",
+        "Kyu Junior brown 2 / بني 2 كيو ناشئين", "Kyu Junior brown 1 / بني 1 كيو ناشئين",
+        "Kyu Senior yellow 7 / أصفر 7 كيو كبار", "Kyu Senior yellow 6 / أصفر 6 كيو كبار",
+        "Kyu Senior orange 5 / برتقالي 5 كيو كبار", "Kyu Senior orange 4 / برتقالي 4 كيو كبار",
+        "Kyu Senior green 3 / أخضر 3 كيو كبار", "Kyu Senior blue 2 / أزرق 2 كيو كبار",
+        "Kyu Senior brown 1 / بني 1 كيو كبار",
+        "Dan 1 / دان 1", "Dan 2 / دان 2", "Dan 3 / دان 3", "Dan 4 / دان 4",
+        "Dan 5 / دان 5", "Dan 6 / دان 6", "Dan 7 / دان 7", "Dan 8 / دان 8"
+    ]
+
+    egyptian_competitions = [
+        "Individual Kata / كاتا فردي", "Kata Team / كاتا جماعي", "Individual Kumite / كوميتيه فردي",
+        "Fuko Go / فوكو جو", "Inbo Mix / إنبو مختلط", "Inbo Male / إنبو ذكور", "Inbo Female / إنبو إناث",
+        "Kumite Team /كوميتيه جماعي" , "Ippon Shobu / ايبون شوبو "
+    ]
+
+    united_general_competitions = [
+        "Individual Kata / كاتا فردي", "Kata Team / كاتا جماعي",
+        "Kumite Ibon / كوميتيه إيبون", "Kumite Nihon / كوميتيه نيهون",
+        "Kumite Sanbon / كوميتيه سانبون", "Kumite Rote Shine / كوميتيه روت شاين"
+    ]
+
+    federation_champs = [
+        "African Open Traditional Karate Championship / بطولة افريقيا المفتوحة للكاراتيه التقليدي",
+        "North Africa United Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
+    ]
 
     if st.session_state.selected_championship.startswith("African Master Course"):
 
         course_type = st.selectbox(BILINGUAL_LABELS["Choose course type:"], ["Master / ماستر ", "General / جنرال"])
         st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
         num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
-
-        belt_options = [
-            "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين", "Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
-            "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين", "Kyu Junior orange green 7 / برتقالي أخضر 7 كيو ناشئين",
-            "Kyu Junior green 6 / أخضر 6 كيو ناشئين", "Kyu Junior green blue 5 / أخضر أزرق 5 كيو ناشئين",
-            "Kyu Junior blue 4 / أزرق 4 كيو ناشئين", "Kyu Junior blue 3 / أزرق 3 كيو ناشئين",
-            "Kyu Junior brown 2 / بني 2 كيو ناشئين", "Kyu Junior brown 1 / بني 1 كيو ناشئين",
-            "Kyu Senior yellow 7 / أصفر 7 كيو كبار", "Kyu Senior yellow 6 / أصفر 6 كيو كبار",
-            "Kyu Senior orange 5 / برتقالي 5 كيو كبار", "Kyu Senior orange 4 / برتقالي 4 كيو كبار",
-            "Kyu Senior green 3 / أخضر 3 كيو كبار", "Kyu Senior blue 2 / أزرق 2 كيو كبار",
-            "Kyu Senior brown 1 / بني 1 كيو كبار",
-            "Dan 1 / دان 1", "Dan 2 / دان 2", "Dan 3 / دان 3", "Dan 4 / دان 4",
-            "Dan 5 / دان 5", "Dan 6 / دان 6", "Dan 7 / دان 7", "Dan 8 / دان 8"
-        ]
 
         for i in range(num_players):
             suffix = f"_{submit_count}_{i}"
@@ -227,7 +245,6 @@ if st.session_state.page == "registration":
                 sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
                 belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
                 
-                # ✅ إضافة زر الاتحاد للماستر كورس
                 federation = st.selectbox(
                     BILINGUAL_LABELS["Select Federation"],
                     ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
@@ -245,8 +262,10 @@ if st.session_state.page == "registration":
                     "Sex": sex,
                     "Belt Degree": belt,
                     "Competitions": "",
-                    "Federation": federation,  # ✅ حفظ الاتحاد
-                    "Championship": f"African Master Course - {course_type}"
+                    "Federation": federation,
+                    "Championship": f"African Master Course - {course_type}",
+                    "Height": None,
+                    "Weight": None
                 })
 
     else:
@@ -255,32 +274,6 @@ if st.session_state.page == "registration":
         st.session_state.coach_name = st.text_input(BILINGUAL_LABELS["Enter Coach Name for all players"], value=st.session_state.coach_name)
         st.session_state.phone_number = st.text_input(BILINGUAL_LABELS["Enter Phone Number for the Coach"], value=st.session_state.phone_number)
         num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
-
-        belt_options = [
-            "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين", "Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
-            "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين", "Kyu Junior orange green 7 / برتقالي أخضر 7 كيو ناشئين",
-            "Kyu Junior green 6 / أخضر 6 كيو ناشئين", "Kyu Junior green blue 5 / أخضر أزرق 5 كيو ناشئين",
-            "Kyu Junior blue 4 / أزرق 4 كيو ناشئين", "Kyu Junior blue 3 / أزرق 3 كيو ناشئين",
-            "Kyu Junior brown 2 / بني 2 كيو ناشئين", "Kyu Junior brown 1 / بني 1 كيو ناشئين",
-            "Kyu Senior yellow 7 / أصفر 7 كيو كبار", "Kyu Senior yellow 6 / أصفر 6 كيو كبار",
-            "Kyu Senior orange 5 / برتقالي 5 كيو كبار", "Kyu Senior orange 4 / برتقالي 4 كيو كبار",
-            "Kyu Senior green 3 / أخضر 3 كيو كبار", "Kyu Senior blue 2 / أزرق 2 كيو كبار",
-            "Kyu Senior brown 1 / بني 1 كيو كبار",
-            "Dan 1 / دان 1", "Dan 2 / دان 2", "Dan 3 / دان 3", "Dan 4 / دان 4",
-            "Dan 5 / دان 5", "Dan 6 / دان 6", "Dan 7 / دان 7", "Dan 8 / دان 8"
-        ]
-
-        egyptian_competitions = [
-            "Individual Kata / كاتا فردي", "Kata Team / كاتا جماعي", "Individual Kumite / كوميتيه فردي",
-            "Fuko Go / فوكو جو", "Inbo Mix / إنبو مختلط", "Inbo Male / إنبو ذكور", "Inbo Female / إنبو إناث",
-            "Kumite Team /كوميتيه جماعي" , "Ippon Shobu / ايبون شوبو "
-        ]
-
-        united_general_competitions = [
-            "Individual Kata / كاتا فردي", "Kata Team / كاتا جماعي",
-            "Kumite Ibon / كوميتيه إيبون", "Kumite Nihon / كوميتيه نيهون",
-            "Kumite Sanbon / كوميتيه سانبون", "Kumite Rote Shine / كوميتيه روت شاين"
-        ]
 
         for i in range(num_players):
             suffix = f"_{submit_count}_{i}"
@@ -293,11 +286,6 @@ if st.session_state.page == "registration":
                 federation = ""
                 comp_list = []
 
-                federation_champs = [
-                    "African Open Traditional Karate Championship / بطولة افريقيا المفتوحة للكاراتيه التقليدي",
-                    "North Africa United Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
-                ]
-
                 if st.session_state.selected_championship in federation_champs:
                     federation = st.selectbox(
                         BILINGUAL_LABELS["Select Federation"],
@@ -306,10 +294,16 @@ if st.session_state.page == "registration":
                         key=f"fed{suffix}"
                     )
                     comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
+
+                    height = weight = None
+                    if "United General Committee" in federation:
+                        height = st.number_input("Height / الطول (cm)", min_value=100, max_value=250, step=1, key=f"height{suffix}")
+                        weight = st.number_input("Weight / الوزن (kg)", min_value=20, max_value=200, step=1, key=f"weight{suffix}")
                 else:
                     comp_list = ["Individual Kata / كاتا فردي","Kata Team / كاتا جماعي","Individual Kumite / كوميتيه فردي",
                                 "Fuko Go / فوكو جو","Inbo Mix / إنبو مختلط","Inbo Male / إنبو ذكور",
                                 "Inbo Female / إنبو إناث","Kumite Team / كوميتيه جماعي", "Ippon Shobu / ايبون شوبو "]
+                    height = weight = None
 
                 competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
 
@@ -324,14 +318,10 @@ if st.session_state.page == "registration":
                     "Belt Degree": belt,
                     "Competitions": ", ".join(competitions),
                     "Federation": federation,
-                    "Championship": st.session_state.selected_championship
+                    "Championship": st.session_state.selected_championship,
+                    "Height": height,
+                    "Weight": weight
                 })
-
-   
-
-# =====================================================
-# ---------------- Submit Button ----------------------
-# =====================================================
 
 # =====================================================
 # ---------------- Submit Button ----------------------
@@ -350,8 +340,6 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         phone = athlete["Phone Number"]
         competitions = athlete["Competitions"]
         championship = athlete["Championship"]
-
-       
 
         if not name: errors.append("❌ Athlete name is required.")
         if not belt: errors.append("❌ Belt degree is required.")
@@ -372,25 +360,21 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         for e in errors:
             st.write(f"• {e}")
     else:
-        # حفظ البيانات
         for athlete in athletes_data:
             df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
         
         save_data(df, athletes_data)
         
-        # ✅ رسالة نجاح
         st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
         
-        # ✅ إعادة تعيين كل الحقول
         st.session_state.submit_count += 1
         st.session_state.club = ""
         st.session_state.nationality = ""
         st.session_state.coach_name = ""
         st.session_state.phone_number = ""
         
-        # مسح جميع حقول اللاعبين
         for key in list(st.session_state.keys()):
-            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "belt_", "fed_", "fed_master_", "comp_"]):
+            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "belt_", "fed_", "fed_master_", "comp_", "height", "weight"]):
                 del st.session_state[key]
         
         col1, col2 = st.columns(2)
@@ -418,17 +402,4 @@ if admin_password == "mobadr90":
         }
         st.dataframe(display_df, use_container_width=True, column_config=column_config)
 
-        try:
-            buffer = io.BytesIO()
-            df.to_excel(buffer, index=False, engine="openpyxl")
-            buffer.seek(0)
-            filename = st.session_state.get("selected_championship", "athletes").replace(" ", "_")
-            st.download_button(
-                "📥 Download Excel", buffer.getvalue(),
-                file_name=f"{filename}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        except ImportError:
-            st.warning("📦 Install openpyxl: `pip install openpyxl`")
-else:
-    st.sidebar.warning("Not logged in.")
+       
