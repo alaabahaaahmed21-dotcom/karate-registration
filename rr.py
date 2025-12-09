@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
-import io
 from pathlib import Path
 import requests
 import re  
@@ -13,17 +12,21 @@ import re
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"
 
 def save_data(df, new_players):
-    # حفظ CSV محلي
-    df.to_csv(DATA_FILE, index=False)
-    
-    # حفظ كل لاعب في Google Sheet
+    # تأكد من تحويل None لقيمة فارغة قبل الحفظ
     for player in new_players:
-        # نضمن أن Height و Weight موجودين كقيم صحيحة
-        if player.get("Height") is None:
+        if player["Height"] is None:
             player["Height"] = ""
-        if player.get("Weight") is None:
+        if player["Weight"] is None:
             player["Weight"] = ""
         save_to_google_sheet(player)
+    df.to_csv(DATA_FILE, index=False)
+
+def save_to_google_sheet(row):
+    try:
+        r = requests.post(GOOGLE_SHEET_API, json=row)
+        return r.status_code == 200
+    except:
+        return False
 
 def validate_phone(phone):
     pattern = r'^01[0-9]{9}$'
@@ -107,13 +110,6 @@ BILINGUAL_LABELS = {
 # =====================================================
 # ---------------- Load Data ---------------------------
 # =====================================================
-
-def save_to_google_sheet(row):
-    try:
-        r = requests.post(GOOGLE_SHEET_API, json=row)
-        return r.status_code == 200
-    except:
-        return False
 
 def load_data():
     cols = list(BILINGUAL_COLS.keys())
@@ -234,49 +230,58 @@ if st.session_state.page == "registration":
         "North Africa United Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
     ]
 
-    if st.session_state.selected_championship.startswith("African Master Course"):
+    # ============== Form Inputs ==============
+    st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
+    st.session_state.nationality = st.text_input(BILINGUAL_LABELS["Enter Nationality for all players"], value=st.session_state.nationality)
+    st.session_state.coach_name = st.text_input(BILINGUAL_LABELS["Enter Coach Name for all players"], value=st.session_state.coach_name)
+    st.session_state.phone_number = st.text_input(BILINGUAL_LABELS["Enter Phone Number for the Coach"], value=st.session_state.phone_number)
+    num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
 
-        course_type = st.selectbox(BILINGUAL_LABELS["Choose course type:"], ["Master / ماستر ", "General / جنرال"])
-        st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
-        num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
+    for i in range(num_players):
+        suffix = f"_{submit_count}_{i}"
+        with st.expander(f"Player {i+1}"):
+            athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
+            dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
+            sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
+            belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
 
-        for i in range(num_players):
-            suffix = f"_{submit_count}_{i}"
-            with st.expander(f"Player {i+1}"):
-                athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
-                dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
-                nationality = st.text_input(BILINGUAL_LABELS["Nationality"], key=f"nat{suffix}")
-                phone = st.text_input(BILINGUAL_LABELS["Phone Number"], key=f"phone{suffix}")
-                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
-                belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
-                
+            federation = ""
+            comp_list = []
+
+            if st.session_state.selected_championship in federation_champs:
                 federation = st.selectbox(
                     BILINGUAL_LABELS["Select Federation"],
                     ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
                      "United General Committee / لجنة الجنرال الموحد"],
-                    key=f"fed_master_{suffix}"
+                    key=f"fed{suffix}"
                 )
+                comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
 
                 height = weight = None
                 if "United General Committee" in federation:
                     height = st.number_input("Height / الطول (cm)", min_value=100, max_value=250, step=1, key=f"height{suffix}")
                     weight = st.number_input("Weight / الوزن (kg)", min_value=20, max_value=200, step=1, key=f"weight{suffix}")
+            else:
+                comp_list = egyptian_competitions
+                height = weight = None
 
-                athletes_data.append({
-                    "Athlete Name": athlete_name.strip(),
-                    "Club": st.session_state.club.strip(),
-                    "Nationality": nationality.strip(),
-                    "Coach Name": "",
-                    "Phone Number": phone.strip(),
-                    "Date of Birth": str(dob),
-                    "Sex": sex,
-                    "Belt Degree": belt,
-                    "Competitions": "",
-                    "Federation": federation,
-                    "Championship": f"African Master Course - {course_type}",
-                    "Height": height,
-                    "Weight": weight
-                })
+            competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
+
+            athletes_data.append({
+                "Athlete Name": athlete_name.strip(),
+                "Club": st.session_state.club.strip(),
+                "Nationality": st.session_state.nationality.strip(),
+                "Coach Name": st.session_state.coach_name.strip(),
+                "Phone Number": st.session_state.phone_number.strip(),
+                "Date of Birth": str(dob),
+                "Sex": sex,
+                "Belt Degree": belt,
+                "Competitions": ", ".join(competitions),
+                "Federation": federation,
+                "Championship": st.session_state.selected_championship,
+                "Height": height,
+                "Weight": weight
+            })
 
 # =====================================================
 # ---------------- Submit Button ----------------------
