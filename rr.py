@@ -287,8 +287,8 @@ if st.session_state.page == "registration":
                 "Athlete Name": athlete_name.strip(),
                 "Club": st.session_state.club.strip(),
                 "Nationality": st.session_state.nationality.strip(),
-                "Coach Name": "",  # مش موجود للماستر كورس
-                "Phone Number": st.session_state.phone_number.strip(),  # موجود
+                "Coach Name": "",
+                "Phone Number": st.session_state.phone_number.strip(),
                 "Date of Birth": str(dob),
                 "Sex": sex,
                 "Belt Degree": belt,
@@ -298,49 +298,6 @@ if st.session_state.page == "registration":
                 "Height": height,
                 "Weight": weight
             })
-
-           
-            # ======== باقي البطولات ==========
-                else:
-                federation = ""
-                comp_list = []
-
-                if st.session_state.selected_championship in federation_champs:
-                    federation = st.selectbox(
-                        BILINGUAL_LABELS["Select Federation"],
-                        ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
-                         "United General Committee / لجنة الجنرال الموحد"],
-                        key=f"fed{suffix}"
-                    )
-                    comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
-
-                    height = weight = None
-                    if "United General Committee" in federation:
-                        height = st.number_input("Height / الطول (cm)", min_value=100, max_value=250, step=1, key=f"height{suffix}")
-                        weight = st.number_input("Weight / الوزن (kg)", min_value=20, max_value=200, step=1, key=f"weight{suffix}")
-                else:
-                    comp_list = egyptian_competitions
-                    height = weight = None
-
-                competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
-                championship_name = st.session_state.selected_championship
-
-         athletes_data.append({
-    "Athlete Name": athlete_name.strip(),
-    "Club": st.session_state.club.strip(),
-    "Nationality": st.session_state.nationality.strip(),
-    "Coach Name": "",  # مش موجود للماستر كورس
-    "Phone Number": phone_number.strip(),  # موجود
-    "Date of Birth": str(dob),
-    "Sex": sex,
-    "Belt Degree": belt,
-    "Competitions": competitions,
-    "Federation": federation,
-    "Championship": championship_name,
-    "Height": height,
-    "Weight": weight
-})
-
 
 # =====================================================
 # ---------------- Submit Button ----------------------
