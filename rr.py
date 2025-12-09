@@ -240,23 +240,57 @@ if st.session_state.page == "registration":
             belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
 
             # ======== African Master Course ==========
-            if st.session_state.selected_championship.startswith("African Master Course"):
-                if "course_type_master" not in st.session_state:
-                    st.session_state.course_type_master = st.selectbox(
-                        BILINGUAL_LABELS["Choose course type:"],
-                        ["Master / ماستر ", "General / جنرال"]
-                    )
-                course_type = st.session_state.course_type_master
-                championship_name = f"African Master Course - {course_type}"
+              if st.session_state.selected_championship.startswith("African Master Course"):
 
+        course_type = st.selectbox(BILINGUAL_LABELS["Choose course type:"], ["Master / ماستر ", "General / جنرال"])
+        st.session_state.club = st.text_input(BILINGUAL_LABELS["Enter Club for all players"], value=st.session_state.club)
+        num_players = st.number_input(BILINGUAL_LABELS["Number of players to add:"], min_value=1, value=1)
+
+        belt_options = [
+            "Kyu Junior yellow 10 / أصفر 10 كيو ناشئين", "Kyu Junior yellow 9 / أصفر 9 كيو ناشئين",
+            "Kyu Junior orange 8 / برتقالي 8 كيو ناشئين", "Kyu Junior orange green 7 / برتقالي أخضر 7 كيو ناشئين",
+            "Kyu Junior green 6 / أخضر 6 كيو ناشئين", "Kyu Junior green blue 5 / أخضر أزرق 5 كيو ناشئين",
+            "Kyu Junior blue 4 / أزرق 4 كيو ناشئين", "Kyu Junior blue 3 / أزرق 3 كيو ناشئين",
+            "Kyu Junior brown 2 / بني 2 كيو ناشئين", "Kyu Junior brown 1 / بني 1 كيو ناشئين",
+            "Kyu Senior yellow 7 / أصفر 7 كيو كبار", "Kyu Senior yellow 6 / أصفر 6 كيو كبار",
+            "Kyu Senior orange 5 / برتقالي 5 كيو كبار", "Kyu Senior orange 4 / برتقالي 4 كيو كبار",
+            "Kyu Senior green 3 / أخضر 3 كيو كبار", "Kyu Senior blue 2 / أزرق 2 كيو كبار",
+            "Kyu Senior brown 1 / بني 1 كيو كبار",
+            "Dan 1 / دان 1", "Dan 2 / دان 2", "Dan 3 / دان 3", "Dan 4 / دان 4",
+            "Dan 5 / دان 5", "Dan 6 / دان 6", "Dan 7 / دان 7", "Dan 8 / دان 8"
+        ]
+
+        for i in range(num_players):
+            suffix = f"_{submit_count}_{i}"
+            with st.expander(f"Player {i+1}"):
+                athlete_name = st.text_input(BILINGUAL_LABELS["Athlete Name"], key=f"name{suffix}")
+                dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
+                nationality = st.text_input(BILINGUAL_LABELS["Nationality"], key=f"nat{suffix}")
+                phone = st.text_input(BILINGUAL_LABELS["Phone Number"], key=f"phone{suffix}")
+                sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
+                belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
+
+                # ✅ إضافة زر الاتحاد للماستر كورس
                 federation = st.selectbox(
                     BILINGUAL_LABELS["Select Federation"],
                     ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
                      "United General Committee / لجنة الجنرال الموحد"],
                     key=f"fed_master_{suffix}"
                 )
-                competitions = ""
-                height = weight = None
+
+                athletes_data.append({
+                    "Athlete Name": athlete_name.strip(),
+                    "Club": st.session_state.club.strip(),
+                    "Nationality": nationality.strip(),
+                    "Coach Name": "",
+                    "Phone Number": phone.strip(),
+                    "Date of Birth": str(dob),
+                    "Sex": sex,
+                    "Belt Degree": belt,
+                    "Competitions": "",
+                    "Federation": federation,  # ✅ حفظ الاتحاد
+                    "Championship": f"African Master Course - {course_type}"
+                })
 
             # ======== باقي البطولات ==========
             else:
