@@ -9,7 +9,7 @@ import re
 # ---------------- Google Sheet API -------------------
 # =====================================================
 
-GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbxBqxEfq_GdfP8nKw0VP9mcJbAVuGonvdzI1WCZLhMyFCpyNJZ0Hgp_MXsnRtmAJETQ/exec"
+GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzpLfTMCfKY8HTDAjaayTFoDID3EI8PIq-6aiZHXqaz3JqxrppKSrjGGmxJtONRRTIv/exec"
 
 def save_data(df, new_players):
     # تأكد من تحويل None لقيمة فارغة قبل الحفظ
