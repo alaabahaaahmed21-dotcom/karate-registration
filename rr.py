@@ -1,4 +1,4 @@
-mport streamlit as st
+import streamlit as st
 import pandas as pd
 from datetime import date
 from pathlib import Path
@@ -245,27 +245,41 @@ if st.session_state.page == "registration":
             sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
             belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
 
-            federation = ""
-            comp_list = []
-
-            if st.session_state.selected_championship in federation_champs:
+            # ========== African Master Course ==========
+            if st.session_state.selected_championship.startswith("African Master Course"):
                 federation = st.selectbox(
                     BILINGUAL_LABELS["Select Federation"],
                     ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
                      "United General Committee / لجنة الجنرال الموحد"],
-                    key=f"fed{suffix}"
+                    key=f"fed_master_{suffix}"
                 )
-                comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
+                competitions = ""  # لا مسابقات
+                height = None
+                weight = None
 
-                height = weight = None
-                if "United General Committee" in federation:
-                    height = st.number_input("Height / الطول (cm)", min_value=100, max_value=250, step=1, key=f"height{suffix}")
-                    weight = st.number_input("Weight / الوزن (kg)", min_value=20, max_value=200, step=1, key=f"weight{suffix}")
+            # ========== باقي البطولات ==========
             else:
-                comp_list = egyptian_competitions
-                height = weight = None
+                federation = ""
+                comp_list = []
 
-            competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
+                if st.session_state.selected_championship in federation_champs:
+                    federation = st.selectbox(
+                        BILINGUAL_LABELS["Select Federation"],
+                        ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
+                         "United General Committee / لجنة الجنرال الموحد"],
+                        key=f"fed{suffix}"
+                    )
+                    comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
+
+                    height = weight = None
+                    if "United General Committee" in federation:
+                        height = st.number_input("Height / الطول (cm)", min_value=100, max_value=250, step=1, key=f"height{suffix}")
+                        weight = st.number_input("Weight / الوزن (kg)", min_value=20, max_value=200, step=1, key=f"weight{suffix}")
+                else:
+                    comp_list = egyptian_competitions
+                    height = weight = None
+
+                competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
 
             athletes_data.append({
                 "Athlete Name": athlete_name.strip(),
@@ -276,7 +290,7 @@ if st.session_state.page == "registration":
                 "Date of Birth": str(dob),
                 "Sex": sex,
                 "Belt Degree": belt,
-                "Competitions": ", ".join(competitions),
+                "Competitions": competitions if isinstance(competitions, str) else ", ".join(competitions),
                 "Federation": federation,
                 "Championship": st.session_state.selected_championship,
                 "Height": height,
