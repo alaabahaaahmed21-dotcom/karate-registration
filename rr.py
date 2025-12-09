@@ -273,7 +273,7 @@ if st.session_state.page == "registration":
         egyptian_competitions = [
             "Individual Kata / كاتا فردي", "Kata Team / كاتا جماعي", "Individual Kumite / كوميتيه فردي",
             "Fuko Go / فوكو جو", "Inbo Mix / إنبو مختلط", "Inbo Male / إنبو ذكور", "Inbo Female / إنبو إناث",
-            "Kumite Team /كوميتيه جماعي "
+            "Kumite Team /كوميتيه جماعي , "Ippon Shobu / ايبون شوبو "
         ]
 
         united_general_competitions = [
@@ -309,7 +309,7 @@ if st.session_state.page == "registration":
                 else:
                     comp_list = ["Individual Kata / كاتا فردي","Kata Team / كاتا جماعي","Individual Kumite / كوميتيه فردي",
                                 "Fuko Go / فوكو جو","Inbo Mix / إنبو مختلط","Inbo Male / إنبو ذكور",
-                                "Inbo Female / إنبو إناث","Kumite Team / كوميتيه جماعي"]
+                                "Inbo Female / إنبو إناث","Kumite Team / كوميتيه جماعي", "Ippon Shobu / ايبون شوبو "]
 
                 competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
 
