@@ -362,70 +362,54 @@ if st.session_state.page == "registration":
 # ---------------- Submit Button ----------------------
 # =====================================================
 
-if st.button("Submit All / إرسال الكل") and athletes_data:
-    df, _ = load_data()
-    errors = []
+for athlete in athletes_data:
+    course_type = athlete.get("Course Type", "")  # نوع الكورس
 
-    for athlete in athletes_data:
-        name = athlete["Athlete Name"]
-        belt = athlete["Belt Degree"]
-        club = athlete["Club"]
-        nationality = athlete["Nationality"]
-        coach = athlete["Coach Name"]
-        phone = athlete["Phone Number"]
-        competitions = athlete["Competitions"]
-        championship = athlete["Championship"]
-        weight = athlete.get("Weight", "")
-        height = athlete.get("Height", "")
-        federation = athlete.get("Federation", "")
+    name = athlete.get("Athlete Name", "")
+    belt = athlete.get("Belt Degree", "")
+    club = athlete.get("Club", "")
+    nationality = athlete.get("Nationality", "")
+    coach = athlete.get("Coach Name", "")
+    phone = athlete.get("Phone Number", "")
+    competitions = athlete.get("Competitions", "")
+    championship = athlete.get("Championship", "")
+    weight = athlete.get("Weight", "")
+    height = athlete.get("Height", "")
+    federation = athlete.get("Federation", "")
 
-        if not name: errors.append("❌ Athlete name is required.")
-        if not belt: errors.append("❌ Belt degree is required.")
-        if not club: errors.append("❌ Club is required.")
-        if not nationality: errors.append("❌ Nationality is required.")
+    # ================================
+    # 🔵 1) حقول مطلوبة دايماً
+    # ================================
+    if not name: errors.append("❌ Athlete name is required.")
+    if not club: errors.append("❌ Club is required.")
+    if not nationality: errors.append("❌ Nationality is required.")
+    if not coach: errors.append("❌ Coach name is required.")
 
-        if not phone: 
-            errors.append("❌ Phone number is required.")
-        elif not validate_phone(phone):
-            errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx")
+    # الهاتف
+    if not phone:
+        errors.append("❌ Phone number is required.")
+    elif not validate_phone(phone):
+        errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx")
 
-        # ✅ التحقق من الوزن والطول فقط عند اتحاد الجنرال
-        if "United General Committee / لجنة الجنرال الموحد" in federation:
-            if not validate_weight_height(weight, height):
-                errors.append("❌ Weight (30-200kg) and Height (140-250cm) are required and must be valid for United General Committee.")
+    # ================================
+    # 🔵 2) لو الكورس Master Course
+    # ================================
+    if course_type == "Master Course":
+        # الماستر كورس لا يحتاج مسابقات ولا اتحاد ولا وزن ولا طول
+        if not belt:
+            errors.append("❌ Belt degree is required for Master Course.")
+        continue  # ⛔ نخرج من التحقق ومندخلش الشروط اللي بعد كده
 
-        if not competitions: errors.append("❌ At least one competition is required.")
-        if not coach: errors.append("❌ Coach name is required.")
+    # ================================
+    # 🔵 3) لو مش Master Course → اختبارات عادية
+    # ================================
+    if not competitions:
+        errors.append("❌ At least one competition is required.")
 
-    if errors:
-        st.error("🔴 Fix the following errors:")
-        for e in errors:
-            st.write(f"• {e}")
-    else:
-        # حفظ البيانات
-        for athlete in athletes_data:
-            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
-
-        save_data(df, athletes_data)
-
-        st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
-
-        st.session_state.submit_count += 1
-        st.session_state.club = ""
-        st.session_state.nationality = ""
-        st.session_state.coach_name = ""
-        st.session_state.phone_number = ""
-
-        for key in list(st.session_state.keys()):
-            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "belt_", "fed_", "fed_master_", "comp_", "weight_", "height_"]):
-                del st.session_state[key]
-
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("➕ Add More Players / إضافة المزيد"):
-                st.rerun()
-
-        st.stop()
+    # شرط لجنة الجنرال فقط
+    if "United General Committee" in federation:
+        if not validate_weight_height(weight, height):
+            errors.append("❌ Weight (30-200kg) and Height (140-250cm) are required for United General Committee.")
 
 # =====================================================
 # ---------------- Admin Panel -------------------------
