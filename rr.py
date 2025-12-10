@@ -362,38 +362,69 @@ if st.session_state.page == "registration":
 # ---------------- Submit Button ----------------------
 # =====================================================
 
-for athlete in athletes_data:
-    errors_local = []  # Errors for this athlete only
+if st.button("Submit All / إرسال الكل") and athletes_data:
+    df, _ = load_data()
+    errors = []
 
-    required_fields = {
-        "Athlete Name": "❌ Athlete name is required.",
-        "Belt Degree": "❌ Belt degree is required.",
-        "Club": "❌ Club is required.",
-        "Nationality": "❌ Nationality is required.",
-        "Coach Name": "❌ Coach name is required.",
-    }
-
-    # لو الحقل موجود في بيانات اللاعب → يبقى مطلوب فعلاً
-    for field, error_msg in required_fields.items():
-        if field in athlete and not athlete[field]:
-            errors_local.append(error_msg)
-
-    # التحقق من رقم الهاتف فقط لو موجود فعلاً في البيانات
-    if "Phone Number" in athlete:
+    for athlete in athletes_data:
+        name = athlete["Athlete Name"]
+        belt = athlete["Belt Degree"]
+        club = athlete["Club"]
+        nationality = athlete["Nationality"]
+        coach = athlete["Coach Name"]
         phone = athlete["Phone Number"]
-        if not phone:
-            errors_local.append("❌ Phone number is required.")
+        competitions = athlete["Competitions"]
+        championship = athlete["Championship"]
+
+
+
+        if not name: errors.append("❌ Athlete name is required.")
+        if not belt: errors.append("❌ Belt degree is required.")
+        if not club: errors.append("❌ Club is required.")
+        if not nationality: errors.append("❌ Nationality is required.")
+
+        if not phone: 
+            errors.append("❌ Phone number is required.")
         elif not validate_phone(phone):
-            errors_local.append("❌ Invalid phone format. Use: 01xxxxxxxxx")
+            errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx")
 
-    # التحقق من الوزن والطول فقط لو موجودين فعليًا
-    if "Federation" in athlete and "United General Committee" in athlete["Federation"]:
-        if ("Weight" in athlete and "Height" in athlete):
-            if not validate_weight_height(athlete["Weight"], athlete["Height"]):
-                errors_local.append("❌ Weight (30-200kg) and Height (140-250cm) are required for United General Committee.")
+        if not championship.startswith("African Master Course"):
+            if not competitions: errors.append("❌ At least one competition is required.")
+            if not coach: errors.append("❌ Coach name is required.")
 
-    # إضافة كل الأخطاء
-    errors.extend(errors_local)
+    if errors:
+        st.error("🔴 Fix the following errors:")
+        for e in errors:
+            st.write(f"• {e}")
+    else:
+        # حفظ البيانات
+        for athlete in athletes_data:
+            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+
+        save_data(df, athletes_data)
+
+        # ✅ رسالة نجاح
+        st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
+
+        # ✅ إعادة تعيين كل الحقول
+        st.session_state.submit_count += 1
+        st.session_state.club = ""
+        st.session_state.nationality = ""
+        st.session_state.coach_name = ""
+        st.session_state.phone_number = ""
+
+        # مسح جميع حقول اللاعبين
+        for key in list(st.session_state.keys()):
+            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "belt_", "fed_", "fed_master_", "comp_"]):
+                del st.session_state[key]
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("➕ Add More Players / إضافة المزيد"):
+                st.rerun()
+
+        st.stop()
+
 # =====================================================
 # ---------------- Admin Panel -------------------------
 # =====================================================
