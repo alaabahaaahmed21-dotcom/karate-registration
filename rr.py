@@ -10,7 +10,7 @@ import re
 # ---------------- Google Sheet API -------------------
 # =====================================================
 
-GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbwpQE31wpWDOj0D9Rgy1pRTI_9qTwDi1qUt4Zv4eylv8US3jFnt1bkWXun1UxL5naS9/exec"
+GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"
 
 def save_data(df, new_players):
     # حفظ كل البيانات في CSV
@@ -25,17 +25,6 @@ def validate_phone(phone):
     if re.match(pattern, phone.strip()):
         return True
     return False
-
-def validate_weight_height(weight, height):
-    """التحقق من صحة الوزن والطول"""
-    try:
-        w = float(weight)
-        h = float(height)
-        if 30 <= w <= 200 and 140 <= h <= 250:
-            return True
-        return False
-    except:
-        return False
 
 # =====================================================
 # ---------------- Logos ------------------------------
@@ -80,8 +69,6 @@ BILINGUAL_COLS = {
     "Date of Birth": "Date of Birth / تاريخ الميلاد",
     "Sex": "Sex / الجنس",
     "Belt Degree": "Belt Degree / درجة الحزام",
-    "Weight": "Weight (kg) / الوزن (كجم)",
-    "Height": "Height (cm) / الطول (سم)",
     "Competitions": "Competitions / المسابقات",
     "Federation": "Federation / الاتحاد"
 }
@@ -99,8 +86,6 @@ BILINGUAL_LABELS = {
     "Date of Birth": "Date of Birth / تاريخ الميلاد",
     "Sex": "Sex / الجنس",
     "Belt Degree": "Belt Degree / درجة الحزام",
-    "Weight": "Weight (kg) / الوزن (كجم)",
-    "Height": "Height (cm) / الطول (سم)",
     "Competitions": "Competitions / المسابقات",
     "Federation": "Federation / الاتحاد",
     "Enter Club for all players": "Enter Club for all players / أدخل النادي لجميع اللاعبين",
@@ -209,6 +194,7 @@ if st.session_state.page == "registration":
 
     athletes_data = []
 
+    # ✅ Fixed: submit_count مباشرة من session_state
     submit_count = st.session_state.submit_count
 
     if st.session_state.selected_championship.startswith("African Master Course"):
@@ -241,6 +227,7 @@ if st.session_state.page == "registration":
                 sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
                 belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
 
+                # ✅ إضافة زر الاتحاد للماستر كورس
                 federation = st.selectbox(
                     BILINGUAL_LABELS["Select Federation"],
                     ["Egyptian Traditional Karate Federation / الاتحاد المصري للكاراتيه التقليدي", 
@@ -257,10 +244,8 @@ if st.session_state.page == "registration":
                     "Date of Birth": str(dob),
                     "Sex": sex,
                     "Belt Degree": belt,
-                    "Weight": "",
-                    "Height": "",
                     "Competitions": "",
-                    "Federation": federation,
+                    "Federation": federation,  # ✅ حفظ الاتحاد
                     "Championship": f"African Master Course - {course_type}"
                 })
 
@@ -288,7 +273,8 @@ if st.session_state.page == "registration":
         egyptian_competitions = [
             "Individual Kata / كاتا فردي", "Kata Team / كاتا جماعي", "Individual Kumite / كوميتيه فردي",
             "Fuko Go / فوكو جو", "Inbo Mix / إنبو مختلط", "Inbo Male / إنبو ذكور", "Inbo Female / إنبو إناث",
-            "Kumite Team /كوميتيه جماعي", "Ippon Shobu / ايبون شوبو"
+            "Kumite Team /كوميتيه جماعي , "Ippon Shobu / ايبون شوبو "
+            "Kumite Team /كوميتيه جماعي" , "Ippon Shobu / ايبون شوبو "
         ]
 
         united_general_competitions = [
@@ -304,11 +290,10 @@ if st.session_state.page == "registration":
                 dob = st.date_input(BILINGUAL_LABELS["Date of Birth"], min_value=date(1960,1,1), max_value=date.today(), key=f"dob{suffix}")
                 sex = st.selectbox(BILINGUAL_LABELS["Sex"], ["Male / ذكر", "Female / انثى"], key=f"sex{suffix}")
                 belt = st.selectbox(BILINGUAL_LABELS["Belt Degree"], belt_options, key=f"belt{suffix}")
-                
-                # ✅ متغير لتفعيل الوزن والطول فقط عند اختيار اتحاد الجنرال
+
                 federation = ""
-                enable_weight_height = False
-                
+                comp_list = []
+
                 federation_champs = [
                     "African Open Traditional Karate Championship / بطولة افريقيا المفتوحة للكاراتيه التقليدي",
                     "North Africa United Karate Championship / بطولة شمال افريقيا للكارتيه الموحد"
@@ -321,24 +306,11 @@ if st.session_state.page == "registration":
                          "United General Committee / لجنة الجنرال الموحد"],
                         key=f"fed{suffix}"
                     )
-                    # ✅ تفعيل الوزن والطول فقط لـ "United General Committee"
-                    enable_weight_height = "United General Committee / لجنة الجنرال الموحد" in federation
+                    comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
                 else:
                     comp_list = ["Individual Kata / كاتا فردي","Kata Team / كاتا جماعي","Individual Kumite / كوميتيه فردي",
                                 "Fuko Go / فوكو جو","Inbo Mix / إنبو مختلط","Inbo Male / إنبو ذكور",
                                 "Inbo Female / إنبو إناث","Kumite Team / كوميتيه جماعي", "Ippon Shobu / ايبون شوبو "]
-
-                # ✅ عرض الوزن والطول فقط عند اتحاد الجنرال
-                weight = ""
-                height = ""
-                if enable_weight_height:
-                    weight = st.number_input(BILINGUAL_LABELS["Weight"], min_value=30.0, max_value=200.0, format="%.1f", key=f"weight{suffix}")
-                    height = st.number_input(BILINGUAL_LABELS["Height"], min_value=140, max_value=250, format="%d", key=f"height{suffix}")
-                
-                if "comp_list" not in locals():
-                    comp_list = []
-                if st.session_state.selected_championship in federation_champs:
-                    comp_list = egyptian_competitions if "Egyptian" in federation else united_general_competitions
 
                 competitions = st.multiselect(BILINGUAL_LABELS["Competitions"], comp_list, key=f"comp{suffix}")
 
@@ -351,63 +323,84 @@ if st.session_state.page == "registration":
                     "Date of Birth": str(dob),
                     "Sex": sex,
                     "Belt Degree": belt,
-                    "Weight": str(weight) if enable_weight_height else "",
-                    "Height": str(height) if enable_weight_height else "",
                     "Competitions": ", ".join(competitions),
                     "Federation": federation,
                     "Championship": st.session_state.selected_championship
                 })
 
+
+
 # =====================================================
 # ---------------- Submit Button ----------------------
 # =====================================================
 
-for athlete in athletes_data:
-    errors_local = []
+# =====================================================
+# ---------------- Submit Button ----------------------
+# =====================================================
 
-    # ==========================
-    # 1) التحقق فقط من الحقول الموجودة فعليًا
-    # ==========================
-    required_if_exists = {
-        "Athlete Name": "❌ Athlete name is required.",
-        "Belt Degree": "❌ Belt degree is required.",
-        "Club": "❌ Club is required.",
-        "Nationality": "❌ Nationality is required.",
-        "Coach Name": "❌ Coach name is required.",
-    }
+if st.button("Submit All / إرسال الكل") and athletes_data:
+    df, _ = load_data()
+    errors = []
 
-    # لو الحقل موجود في athlete → يبقى مطلوب
-    for field, msg in required_if_exists.items():
-        if field in athlete:
-            if not athlete[field]:
-                errors_local.append(msg)
-
-    # ==========================
-    # 2) رقم الهاتف (لو موجود فقط)
-    # ==========================
-    if "Phone Number" in athlete:
+    for athlete in athletes_data:
+        name = athlete["Athlete Name"]
+        belt = athlete["Belt Degree"]
+        club = athlete["Club"]
+        nationality = athlete["Nationality"]
+        coach = athlete["Coach Name"]
         phone = athlete["Phone Number"]
-        if not phone:
-            errors_local.append("❌ Phone number is required.")
+        competitions = athlete["Competitions"]
+        championship = athlete["Championship"]
+
+
+
+        if not name: errors.append("❌ Athlete name is required.")
+        if not belt: errors.append("❌ Belt degree is required.")
+        if not club: errors.append("❌ Club is required.")
+        if not nationality: errors.append("❌ Nationality is required.")
+
+        if not phone: 
+            errors.append("❌ Phone number is required.")
         elif not validate_phone(phone):
-            errors_local.append("❌ Invalid phone number. Use 01xxxxxxxxx")
+            errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx")
 
-    # ==========================
-    # 3) المسابقات (لو موجودة فقط)
-    # ==========================
-    if "Competitions" in athlete:
-        if not athlete["Competitions"]:
-            errors_local.append("❌ At least one competition is required.")
+        if not championship.startswith("African Master Course"):
+            if not competitions: errors.append("❌ At least one competition is required.")
+            if not coach: errors.append("❌ Coach name is required.")
 
-    # ==========================
-    # 4) الوزن والطول (لو موجودين فقط)
-    # ==========================
-    if "Federation" in athlete and "United General Committee" in athlete["Federation"]:
-        if ("Weight" in athlete and "Height" in athlete):
-            if not validate_weight_height(athlete["Weight"], athlete["Height"]):
-                errors_local.append("❌ Weight 30–200kg and Height 140–250cm are required.")
+    if errors:
+        st.error("🔴 Fix the following errors:")
+        for e in errors:
+            st.write(f"• {e}")
+    else:
+        # حفظ البيانات
+        for athlete in athletes_data:
+            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
 
-    errors.extend(errors_local)
+        save_data(df, athletes_data)
+
+        # ✅ رسالة نجاح
+        st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
+
+        # ✅ إعادة تعيين كل الحقول
+        st.session_state.submit_count += 1
+        st.session_state.club = ""
+        st.session_state.nationality = ""
+        st.session_state.coach_name = ""
+        st.session_state.phone_number = ""
+
+        # مسح جميع حقول اللاعبين
+        for key in list(st.session_state.keys()):
+            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "belt_", "fed_", "fed_master_", "comp_"]):
+                del st.session_state[key]
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("➕ Add More Players / إضافة المزيد"):
+                st.rerun()
+
+        st.stop()
+
 # =====================================================
 # ---------------- Admin Panel -------------------------
 # =====================================================
