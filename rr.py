@@ -358,9 +358,7 @@ if st.button("Submit All / إرسال الكل") and athletes_data:
         elif not validate_phone(phone):
             errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx")
 
-        if not championship.startswith("African Master Course"):
-            if not competitions: errors.append("❌ At least one competition is required.")
-            if not coach: errors.append("❌ Coach name is required.")
+       
 
     if errors:
         st.error("🔴 Fix the following errors:")
