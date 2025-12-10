@@ -1,4 +1,5 @@
-mport streamlit as st
+
+import streamlit as st
 import pandas as pd
 from datetime import date
 import io
@@ -10,7 +11,7 @@ import re
 # ---------------- Google Sheet API -------------------
 # =====================================================
 
-GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbyY6FaRazYHmDimh68UpOs2MY04Uc-t5LiI3B_CsYZIAuClBvQ2sBQYIf1unJN45aJU2g/exec"
+GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbwpQE31wpWDOj0D9Rgy1pRTI-9qTwDi1qUt4Zv4eylv8US3jFnt1bkWXun1UxL5naS9/exec"
 
 def save_data(df, new_players):
     # حفظ كل البيانات في CSV
@@ -273,7 +274,6 @@ if st.session_state.page == "registration":
         egyptian_competitions = [
             "Individual Kata / كاتا فردي", "Kata Team / كاتا جماعي", "Individual Kumite / كوميتيه فردي",
             "Fuko Go / فوكو جو", "Inbo Mix / إنبو مختلط", "Inbo Male / إنبو ذكور", "Inbo Female / إنبو إناث",
-            "Kumite Team /كوميتيه جماعي , "Ippon Shobu / ايبون شوبو "
             "Kumite Team /كوميتيه جماعي" , "Ippon Shobu / ايبون شوبو "
         ]
 
@@ -328,11 +328,6 @@ if st.session_state.page == "registration":
                     "Championship": st.session_state.selected_championship
                 })
 
-
-
-# =====================================================
-# ---------------- Submit Button ----------------------
-# =====================================================
 
 # =====================================================
 # ---------------- Submit Button ----------------------
