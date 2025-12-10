@@ -362,66 +362,52 @@ if st.session_state.page == "registration":
 # ---------------- Submit Button ----------------------
 # =====================================================
 
-if st.button("Submit All / إرسال الكل") and athletes_data:
-    df, _ = load_data()
-    errors = []
+for athlete in athletes_data:
+    errors_local = []
 
-    for athlete in athletes_data:
-        name = athlete["Athlete Name"]
-        belt = athlete["Belt Degree"]
-        club = athlete["Club"]
-        nationality = athlete["Nationality"]
-        coach = athlete["Coach Name"]
+    # ==========================
+    # 1) التحقق فقط من الحقول الموجودة فعليًا
+    # ==========================
+    required_if_exists = {
+        "Athlete Name": "❌ Athlete name is required.",
+        "Belt Degree": "❌ Belt degree is required.",
+        "Club": "❌ Club is required.",
+        "Nationality": "❌ Nationality is required.",
+        "Coach Name": "❌ Coach name is required.",
+    }
+
+    # لو الحقل موجود في athlete → يبقى مطلوب
+    for field, msg in required_if_exists.items():
+        if field in athlete:
+            if not athlete[field]:
+                errors_local.append(msg)
+
+    # ==========================
+    # 2) رقم الهاتف (لو موجود فقط)
+    # ==========================
+    if "Phone Number" in athlete:
         phone = athlete["Phone Number"]
-        competitions = athlete["Competitions"]
-        championship = athlete["Championship"]
-
-
-
-        if not name: errors.append("❌ Athlete name is required.")
-        if not belt: errors.append("❌ Belt degree is required.")
-        if not club: errors.append("❌ Club is required.")
-        if not nationality: errors.append("❌ Nationality is required.")
-
-        if not phone: 
-            errors.append("❌ Phone number is required.")
+        if not phone:
+            errors_local.append("❌ Phone number is required.")
         elif not validate_phone(phone):
-            errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx")
+            errors_local.append("❌ Invalid phone number. Use 01xxxxxxxxx")
 
-      
-    if errors:
-        st.error("🔴 Fix the following errors:")
-        for e in errors:
-            st.write(f"• {e}")
-    else:
-        # حفظ البيانات
-        for athlete in athletes_data:
-            df = pd.concat([df, pd.DataFrame([athlete])], ignore_index=True)
+    # ==========================
+    # 3) المسابقات (لو موجودة فقط)
+    # ==========================
+    if "Competitions" in athlete:
+        if not athlete["Competitions"]:
+            errors_local.append("❌ At least one competition is required.")
 
-        save_data(df, athletes_data)
+    # ==========================
+    # 4) الوزن والطول (لو موجودين فقط)
+    # ==========================
+    if "Federation" in athlete and "United General Committee" in athlete["Federation"]:
+        if ("Weight" in athlete and "Height" in athlete):
+            if not validate_weight_height(athlete["Weight"], athlete["Height"]):
+                errors_local.append("❌ Weight 30–200kg and Height 140–250cm are required.")
 
-        # ✅ رسالة نجاح
-        st.success(f"✅ {len(athletes_data)} players registered successfully! ✓")
-
-        # ✅ إعادة تعيين كل الحقول
-        st.session_state.submit_count += 1
-        st.session_state.club = ""
-        st.session_state.nationality = ""
-        st.session_state.coach_name = ""
-        st.session_state.phone_number = ""
-
-        # مسح جميع حقول اللاعبين
-        for key in list(st.session_state.keys()):
-            if any(prefix in key for prefix in ["name_", "dob_", "nat_", "phone_", "sex_", "belt_", "fed_", "fed_master_", "comp_"]):
-                del st.session_state[key]
-
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("➕ Add More Players / إضافة المزيد"):
-                st.rerun()
-
-        st.stop()
-
+    errors.extend(errors_local)
 # =====================================================
 # ---------------- Admin Panel -------------------------
 # =====================================================
