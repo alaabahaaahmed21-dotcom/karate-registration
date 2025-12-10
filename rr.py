@@ -363,54 +363,37 @@ if st.session_state.page == "registration":
 # =====================================================
 
 for athlete in athletes_data:
-    course_type = athlete.get("Course Type", "")  # نوع الكورس
+    errors_local = []  # Errors for this athlete only
 
-    name = athlete.get("Athlete Name", "")
-    belt = athlete.get("Belt Degree", "")
-    club = athlete.get("Club", "")
-    nationality = athlete.get("Nationality", "")
-    coach = athlete.get("Coach Name", "")
-    phone = athlete.get("Phone Number", "")
-    competitions = athlete.get("Competitions", "")
-    championship = athlete.get("Championship", "")
-    weight = athlete.get("Weight", "")
-    height = athlete.get("Height", "")
-    federation = athlete.get("Federation", "")
+    required_fields = {
+        "Athlete Name": "❌ Athlete name is required.",
+        "Belt Degree": "❌ Belt degree is required.",
+        "Club": "❌ Club is required.",
+        "Nationality": "❌ Nationality is required.",
+        "Coach Name": "❌ Coach name is required.",
+    }
 
-    # ================================
-    # 🔵 1) حقول مطلوبة دايماً
-    # ================================
-    if not name: errors.append("❌ Athlete name is required.")
-    if not club: errors.append("❌ Club is required.")
-    if not nationality: errors.append("❌ Nationality is required.")
-    if not coach: errors.append("❌ Coach name is required.")
+    # لو الحقل موجود في بيانات اللاعب → يبقى مطلوب فعلاً
+    for field, error_msg in required_fields.items():
+        if field in athlete and not athlete[field]:
+            errors_local.append(error_msg)
 
-    # الهاتف
-    if not phone:
-        errors.append("❌ Phone number is required.")
-    elif not validate_phone(phone):
-        errors.append("❌ Phone number format is invalid. Use: 01xxxxxxxxx")
+    # التحقق من رقم الهاتف فقط لو موجود فعلاً في البيانات
+    if "Phone Number" in athlete:
+        phone = athlete["Phone Number"]
+        if not phone:
+            errors_local.append("❌ Phone number is required.")
+        elif not validate_phone(phone):
+            errors_local.append("❌ Invalid phone format. Use: 01xxxxxxxxx")
 
-    # ================================
-    # 🔵 2) لو الكورس Master Course
-    # ================================
-    if course_type == "Master Course":
-        # الماستر كورس لا يحتاج مسابقات ولا اتحاد ولا وزن ولا طول
-        if not belt:
-            errors.append("❌ Belt degree is required for Master Course.")
-        continue  # ⛔ نخرج من التحقق ومندخلش الشروط اللي بعد كده
+    # التحقق من الوزن والطول فقط لو موجودين فعليًا
+    if "Federation" in athlete and "United General Committee" in athlete["Federation"]:
+        if ("Weight" in athlete and "Height" in athlete):
+            if not validate_weight_height(athlete["Weight"], athlete["Height"]):
+                errors_local.append("❌ Weight (30-200kg) and Height (140-250cm) are required for United General Committee.")
 
-    # ================================
-    # 🔵 3) لو مش Master Course → اختبارات عادية
-    # ================================
-    if not competitions:
-        errors.append("❌ At least one competition is required.")
-
-    # شرط لجنة الجنرال فقط
-    if "United General Committee" in federation:
-        if not validate_weight_height(weight, height):
-            errors.append("❌ Weight (30-200kg) and Height (140-250cm) are required for United General Committee.")
-
+    # إضافة كل الأخطاء
+    errors.extend(errors_local)
 # =====================================================
 # ---------------- Admin Panel -------------------------
 # =====================================================
