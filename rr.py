@@ -120,13 +120,11 @@ def load_data():
 
     if DATA_FILE.exists():
         try:
-            # First try standard UTF-8
-            df = pd.read_csv(DATA_FILE, encoding="utf-8")
-        except UnicodeDecodeError:
-            # If file isn't UTF-8 (common for Excel/Windows CSVs)
-            df = pd.read_csv(DATA_FILE, encoding="latin-1")
+            df = pd.read_csv(DATA_FILE, encoding="utf-8", on_bad_lines='skip', errors='replace')
+        except Exception:
+            df = pd.read_csv(DATA_FILE, encoding="latin-1", on_bad_lines='skip', errors='replace')
 
-        # Ensure all bilingual columns exist
+        # Ensure all required columns exist
         for c in cols:
             if c not in df.columns:
                 df[c] = ""
@@ -136,7 +134,6 @@ def load_data():
 
         return df, display_df
 
-    # If file doesn't exist
     return (
         pd.DataFrame(columns=cols),
         pd.DataFrame(columns=list(BILINGUAL_COLS.values()))
