@@ -115,24 +115,33 @@ BILINGUAL_LABELS = {
 # =====================================================
 # ---------------- Load Data ---------------------------
 # =====================================================
-def save_to_google_sheet(row):
-    try:
-        r = requests.post(GOOGLE_SHEET_API, json=row)
-        return r.status_code == 200
-    except:
-        return False
-
 def load_data():
     cols = list(BILINGUAL_COLS.keys())
+
     if DATA_FILE.exists():
-        df = pd.read_csv(DATA_FILE)
+        try:
+            # First try standard UTF-8
+            df = pd.read_csv(DATA_FILE, encoding="utf-8")
+        except UnicodeDecodeError:
+            # If file isn't UTF-8 (common for Excel/Windows CSVs)
+            df = pd.read_csv(DATA_FILE, encoding="latin-1")
+
+        # Ensure all bilingual columns exist
         for c in cols:
             if c not in df.columns:
                 df[c] = ""
+
         display_df = df.copy()
         display_df.rename(columns=BILINGUAL_COLS, inplace=True)
+
         return df, display_df
-    return pd.DataFrame(columns=cols), pd.DataFrame(columns=list(BILINGUAL_COLS.values()))
+
+    # If file doesn't exist
+    return (
+        pd.DataFrame(columns=cols),
+        pd.DataFrame(columns=list(BILINGUAL_COLS.values()))
+    )
+
 
 # =====================================================
 # ---------------- Initialize Session State ------------
