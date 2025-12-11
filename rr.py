@@ -12,6 +12,15 @@ import re
 
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbwpQE31wpWDOj0D9Rgy1pRTI_9qTwDi1qUt4Zv4eylv8US3jFnt1bkWXun1UxL5naS9/exec"
 
+# ---------------- Google Sheet Sender -----------------
+def save_to_google_sheet(player):
+    try:
+        response = requests.post(GOOGLE_SHEET_API, json=player)
+        return response.status_code == 200
+    except Exception as e:
+        print("Google Sheet Error:", e)
+        return False
+
 def save_data(df, new_players):
     # حفظ كل البيانات في CSV
     df.to_csv(DATA_FILE, index=False)
@@ -19,6 +28,7 @@ def save_data(df, new_players):
     # إرسال فقط اللاعبين الجدد لجوجل شيت
     for player in new_players:
         save_to_google_sheet(player)
+
 
 def validate_phone(phone):
     pattern = r'^01[0-9]{9}$'
