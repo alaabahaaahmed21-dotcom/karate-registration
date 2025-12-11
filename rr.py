@@ -120,25 +120,33 @@ def load_data():
 
     if DATA_FILE.exists():
         try:
-            df = pd.read_csv(DATA_FILE, encoding="utf-8", on_bad_lines='skip', errors='replace')
+            df = pd.read_csv(
+                DATA_FILE,
+                encoding="utf-8",
+                encoding_errors="replace",
+                on_bad_lines="skip"     # تخطي أي سطر تالف
+            )
         except Exception:
-            df = pd.read_csv(DATA_FILE, encoding="latin-1", on_bad_lines='skip', errors='replace')
+            df = pd.read_csv(
+                DATA_FILE,
+                encoding="latin-1",
+                encoding_errors="replace",
+                on_bad_lines="skip"
+            )
 
-        # Ensure all required columns exist
+        # تأكيد وجود جميع الأعمدة
         for c in cols:
             if c not in df.columns:
                 df[c] = ""
 
         display_df = df.copy()
         display_df.rename(columns=BILINGUAL_COLS, inplace=True)
-
         return df, display_df
 
     return (
         pd.DataFrame(columns=cols),
         pd.DataFrame(columns=list(BILINGUAL_COLS.values()))
     )
-
 
 # =====================================================
 # ---------------- Initialize Session State ------------
